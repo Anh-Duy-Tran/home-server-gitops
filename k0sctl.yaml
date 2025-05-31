@@ -5,14 +5,22 @@ metadata:
   user: admin
 spec:
   hosts:
-    - role: controller+worker
-      installFlags:
-        - --no-taints
+    - role: controller
       ssh:
         address: duytran-app-public-ip
         user: root
         port: 22
         keyPath: ~/.ssh/digitalOceanKey
+      installFlags:
+        - --debug
+    - role: worker
+      ssh:
+        address: duytran-app-large-public-ip
+        user: root
+        port: 22
+        keyPath: ~/.ssh/digitalOceanKey
+      installFlags:
+        - --debug
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -22,19 +30,20 @@ spec:
       spec:
         extensions:
           helm:
+            concurrencyLevel: 5
             repositories:
               - name: traefik
                 url: https://traefik.github.io/charts
-              - name: bitnami
-                url: https://charts.bitnami.com/bitnami
+              # - name: argocd
+              #   url: https://argoproj.github.io/argo-helm
             charts:
               - name: traefik
-                chartname: traefik/traefik
-                version: "20.5.3"
+                version: 35.4.0
                 namespace: default
+                chartname: traefik/traefik
               - name: metallb
-                chartname: bitnami/metallb
-                version: "2.5.4"
+                chartname: oci://registry-1.docker.io/bitnamicharts/metallb
+                version: 6.4.13
                 namespace: default
                 values: |
                   configInline:
@@ -46,6 +55,11 @@ spec:
         api:
           k0sApiPort: 9443
           port: 6443
+          # not sure about this
+          sans:
+            - 127.0.0.1
+            - localhost
+            - k8s.duytran.app
         installConfig:
           users:
             etcdUser: etcd
