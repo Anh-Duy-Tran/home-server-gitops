@@ -5,12 +5,14 @@ metadata:
   user: admin
 spec:
   hosts:
-    - ssh:
+    - role: controller+worker
+      installFlags:
+        - --no-taints
+      ssh:
         address: duytran-app-public-ip
         user: root
         port: 22
         keyPath: ~/.ssh/digitalOceanKey
-      role: controller+worker
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -18,6 +20,29 @@ spec:
       metadata:
         name: k0s
       spec:
+        extensions:
+          helm:
+            repositories:
+              - name: traefik
+                url: https://traefik.github.io/charts
+              - name: bitnami
+                url: https://charts.bitnami.com/bitnami
+            charts:
+              - name: traefik
+                chartname: traefik/traefik
+                version: "20.5.3"
+                namespace: default
+              - name: metallb
+                chartname: bitnami/metallb
+                version: "2.5.4"
+                namespace: default
+                values: |
+                  configInline:
+                    address-pools:
+                    - name: generic-cluster-pool
+                      protocol: layer2
+                      addresses:
+                      - 192.168.0.5-192.168.0.10
         api:
           k0sApiPort: 9443
           port: 6443
