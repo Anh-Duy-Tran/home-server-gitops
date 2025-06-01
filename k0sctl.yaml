@@ -13,6 +13,11 @@ spec:
         keyPath: ~/.ssh/digitalOceanKey
       installFlags:
         - --debug
+      files:
+        - name: metallb-ipaddresspool
+          src: metallb-crds.yaml
+          dstDir: /var/lib/k0s/manifests/metallb/
+          perm: 0644
     - role: worker
       ssh:
         address: duytran-app-large-public-ip
@@ -44,14 +49,7 @@ spec:
               - name: metallb
                 chartname: oci://registry-1.docker.io/bitnamicharts/metallb
                 version: 6.4.13
-                namespace: default
-                values: |
-                  configInline:
-                    address-pools:
-                    - name: generic-cluster-pool
-                      protocol: layer2
-                      addresses:
-                      - 192.168.0.5-192.168.0.10
+                namespace: metallb-system
         api:
           k0sApiPort: 9443
           port: 6443
