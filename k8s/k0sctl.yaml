@@ -18,14 +18,14 @@ spec:
           src: ./metallb/IPAddressPool.yaml
           dstDir: /var/lib/k0s/manifests/metallb/
           perm: 0644
-    # - role: worker
-    #   ssh:
-    #     address: duytran-app-large-public-ip
-    #     user: root
-    #     port: 22
-    #     keyPath: ~/.ssh/digitalOceanKey
-    #   installFlags:
-    #     - --debug
+  # - role: worker
+  #   ssh:
+  #     address: duytran-app-large-public-ip
+  #     user: root
+  #     port: 22
+  #     keyPath: ~/.ssh/digitalOceanKey
+  #   installFlags:
+  #     - --debug
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -39,12 +39,12 @@ spec:
             repositories:
               - name: traefik
                 url: https://traefik.github.io/charts
-              # - name: argocd
-              #   url: https://argoproj.github.io/argo-helm
+              - name: argocd
+                url: https://argoproj.github.io/argo-helm
             charts:
               - name: traefik
                 chartname: traefik/traefik
-                version: "34.3.0"
+                version: 34.3.0
                 namespace: default
                 values: |
                   additionalArguments:
@@ -59,6 +59,10 @@ spec:
               - name: metallb
                 chartname: oci://registry-1.docker.io/bitnamicharts/metallb
                 version: 6.4.13
+                namespace: metallb-system
+              - name: traefik
+                chartname: traefik/traefik
+                version: 8.5.10
                 namespace: metallb-system
         api:
           k0sApiPort: 9443
