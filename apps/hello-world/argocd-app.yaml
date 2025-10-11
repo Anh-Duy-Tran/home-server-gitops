@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: file:///Users/duytran/PersonalCloud
+    repoURL: https://github.com/Anh-Duy-Tran/home-server-gitops.git
     path: apps/hello-world/k8s
     targetRevision: HEAD
   destination:
