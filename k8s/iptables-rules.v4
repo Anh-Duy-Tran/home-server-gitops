@@ -1,0 +1,29 @@
+# Minimal iptables rules - Default ACCEPT policies for k0s
+# This file sets default policies to ACCEPT to allow all traffic
+# k0s/kube-proxy will add their specific rules on top of this
+#
+# apply these rules to iptables instant in the cluster if ran into problem with coredns i/o timeout
+#
+# sudo iptables-restore < /etc/iptables/iptables.rules      <-- this is where to put these rules into
+
+*filter
+# Set default policies to ACCEPT
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+COMMIT
+
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+COMMIT
+
+*mangle
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+COMMIT
