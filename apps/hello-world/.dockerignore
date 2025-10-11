@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+k8s/
+argocd-app.yaml
+Dockerfile
+.dockerignore
