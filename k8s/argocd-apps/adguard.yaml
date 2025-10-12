@@ -1,0 +1,74 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: adguard
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://k8s-at-home.com/charts/
+    targetRevision: 5.5.2
+    chart: adguard-home
+    helm:
+      values: |
+        image:
+          repository: adguard/adguardhome
+          tag: latest
+
+        env:
+          TZ: UTC
+
+        service:
+          main:
+            type: LoadBalancer
+            annotations:
+              metallb.universe.tf/loadBalancerIPs: "192.168.50.102"
+            ports:
+              http:
+                port: 3000
+
+          dns:
+            enabled: true
+            type: LoadBalancer
+            annotations:
+              metallb.universe.tf/loadBalancerIPs: "192.168.50.103"
+            ports:
+              tcp:
+                enabled: true
+                port: 53
+                protocol: TCP
+                targetPort: 53
+              udp:
+                enabled: true
+                port: 53
+                protocol: UDP
+                targetPort: 53
+
+        persistence:
+          config:
+            enabled: true
+            type: emptyDir
+          data:
+            enabled: true
+            type: emptyDir
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: adguard
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
