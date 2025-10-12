@@ -4,9 +4,9 @@ const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello World from Kubernetes!',
+    message: 'Hello from GitOps! Auto-deployed by ArgoCD!',
     hostname: require('os').hostname(),
-    version: '1.0.0',
+    version: '2.0.0',
     timestamp: new Date().toISOString()
   });
 });

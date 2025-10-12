@@ -1,0 +1,164 @@
+name: Hello World GitOps Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/hello-world/**"
+      - "!apps/hello-world/k8s/**" # Don't trigger on manifest changes
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (leave empty for auto-generation)"
+        required: false
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: hello-world
+  APP_PATH: apps/hello-world
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # Full history for version generation
+
+      - name: Generate version tag
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Generate version: v{date}-{short-sha}
+            VERSION="v$(date +%Y%m%d.%H%M%S)-$(git rev-parse --short HEAD)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: ${{ env.APP_PATH }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.APP_PATH }}
+        run: |
+          npm ci --only=production || npm install --omit=dev
+
+      # Optional: Add tests here
+      # - name: Run tests
+      #   working-directory: ${{ env.APP_PATH }}
+      #   run: npm test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-,format=short
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ env.APP_PATH }}
+          file: ${{ env.APP_PATH }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  update-manifests:
+    needs: build-test-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Kubernetes manifest
+        run: |
+          # Update image tag in deployment.yaml
+          sed -i "s|image: .*/hello-world:.*|image: ${{ secrets.DOCKER_USERNAME }}/hello-world:${{ needs.build-test-push.outputs.version }}|g" \
+            ${{ env.APP_PATH }}/k8s/deployment.yaml
+
+          # Show the change
+          echo "Updated deployment.yaml:"
+          grep "image:" ${{ env.APP_PATH }}/k8s/deployment.yaml
+
+      - name: Commit and push manifest updates
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add ${{ env.APP_PATH }}/k8s/deployment.yaml
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "ci: update hello-world image to ${{ needs.build-test-push.outputs.version }}
+
+          Automated update by GitHub Actions
+          - Image: ${{ secrets.DOCKER_USERNAME }}/hello-world:${{ needs.build-test-push.outputs.version }}
+          - Commit: ${{ github.sha }}"
+
+            git push origin main
+            echo "Manifest updated and pushed successfully"
+          fi
+
+      - name: Create deployment summary
+        run: |
+          echo "## Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: \`${{ needs.build-test-push.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: \`${{ secrets.DOCKER_USERNAME }}/hello-world:${{ needs.build-test-push.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ArgoCD Sync" >> $GITHUB_STEP_SUMMARY
+          echo "ArgoCD will automatically detect and deploy this change within 3 minutes." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Manual Verification" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "curl -H \"Host: hello.local\" http://your-cluster-ip:31954/" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # Optional: Wait for ArgoCD sync and verify deployment
+  # verify-deployment:
+  #   needs: [build-test-push, update-manifests]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Wait for ArgoCD sync
+  #     run: |
+  #       echo "Waiting for ArgoCD to sync (typically 3 minutes)..."
+  #       sleep 180
+  #
+  #   - name: Verify deployment
+  #     run: |
+  #       # Add verification logic here
+  #       # Could use ArgoCD CLI or kubectl with kubeconfig
+
