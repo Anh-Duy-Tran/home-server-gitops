@@ -38,11 +38,13 @@ hello-world/
 ### Local Development
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Run locally:
+
 ```bash
 npm start
 # Access at http://localhost:3000
@@ -51,6 +53,7 @@ npm start
 ### Manual Deployment
 
 1. Build and push Docker image:
+
 ```bash
 docker build -t yourusername/hello-world:v1.0.0 .
 docker push yourusername/hello-world:v1.0.0
@@ -59,6 +62,7 @@ docker push yourusername/hello-world:v1.0.0
 2. Update `k8s/deployment.yaml` with new image tag
 
 3. Commit and push to GitHub:
+
 ```bash
 git add -A
 git commit -m "feat: update to v1.0.0"
@@ -89,6 +93,7 @@ Add these secrets to your GitHub repository:
 ### Workflow Triggers
 
 The GitHub Action runs when:
+
 - Code is pushed to `main` branch
 - Changes are made in `apps/hello-world/` directory
 - Manual trigger via GitHub UI
@@ -96,11 +101,13 @@ The GitHub Action runs when:
 ## ArgoCD Configuration
 
 The application is configured with:
+
 - **Auto-sync**: Enabled
 - **Self-heal**: Enabled
 - **Prune**: Enabled
 
 This means ArgoCD will:
+
 1. Automatically detect Git changes
 2. Deploy new versions without manual intervention
 3. Correct any drift from desired state
@@ -109,12 +116,14 @@ This means ArgoCD will:
 ## Testing GitOps Flow
 
 1. **Make a code change**:
+
 ```javascript
 // app.js - Change the message
-message: 'New message here!'
+message: "New message here!";
 ```
 
 2. **Commit and push**:
+
 ```bash
 git add app.js
 git commit -m "feat: update message"
@@ -122,11 +131,13 @@ git push origin main
 ```
 
 3. **Watch the magic happen**:
+
 - GitHub Actions builds new image
 - Updates deployment.yaml with new tag
 - ArgoCD detects change and deploys
 
 4. **Verify deployment**:
+
 ```bash
 curl -H "Host: hello.local" http://<node-ip>:<node-port>/
 # Should show new message
@@ -135,6 +146,7 @@ curl -H "Host: hello.local" http://<node-ip>:<node-port>/
 ## Monitoring
 
 Check application status:
+
 ```bash
 # ArgoCD application status
 kubectl get application -n argocd hello-world
@@ -149,13 +161,16 @@ kubectl logs -l app=hello-world
 ## Rollback
 
 If needed, rollback via:
+
 1. **Git revert** (recommended for GitOps):
+
 ```bash
 git revert HEAD
 git push origin main
 ```
 
 2. **ArgoCD UI/CLI** (temporary):
+
 ```bash
 argocd app rollback hello-world
 ```
@@ -163,15 +178,18 @@ argocd app rollback hello-world
 ## Troubleshooting
 
 ### Image Pull Errors
+
 - Verify Docker Hub credentials
 - Check image exists: `docker pull yourusername/hello-world:tag`
 
 ### ArgoCD Not Syncing
+
 - Check application status: `kubectl describe application hello-world -n argocd`
 - Verify Git repository is accessible
 - Manual sync: `argocd app sync hello-world`
 
 ### Ingress Not Working
+
 - Verify Traefik is running
 - Check ingress: `kubectl get ingress hello-world`
 - Test service directly: `kubectl port-forward svc/hello-world 8080:80`
@@ -184,3 +202,4 @@ argocd app rollback hello-world
 - [ ] Set up staging environment
 - [ ] Add security scanning in CI
 - [ ] Implement blue-green deployments
+
