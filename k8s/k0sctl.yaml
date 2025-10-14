@@ -13,6 +13,11 @@ spec:
         keyPath: ~/.ssh/id_rsa
       installFlags:
         - --debug
+      hooks:
+        # Comment this out if the target host doesn't have firewall problem
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
       files:
         - name: metallb-ipaddresspool
           src: ./metallb/IPAddressPool.yaml
