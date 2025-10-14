@@ -50,7 +50,7 @@ spec:
                 order: 2
                 chartname: traefik/traefik
                 version: 34.3.0
-                namespace: default
+                namespace: traefik
                 values: |
                   additionalArguments:
                     - --log.level=DEBUG
