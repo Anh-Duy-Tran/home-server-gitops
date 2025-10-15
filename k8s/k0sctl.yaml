@@ -23,6 +23,10 @@ spec:
           src: ./metallb/IPAddressPool.yaml
           dstDir: /var/lib/k0s/manifests/metallb/
           perm: 0644
+        - name: cloudflare-tunnel-secrets
+          src: ./cloudflare-tunnel/cloudflare-tunnel.secrets.yaml
+          dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
+          perm: 0644
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -40,6 +44,8 @@ spec:
                 url: https://metallb.github.io/metallb
               - name: argocd
                 url: https://argoproj.github.io/argo-helm
+              - name: cloudflare
+                url: https://cloudflare.github.io/helm-charts
             charts:
               - name: metallb
                 order: 1
@@ -73,6 +79,27 @@ spec:
                   configs:
                     params:
                       server.insecure: true
+              - name: cloudflare-tunnel
+                order: 4
+                chartname: cloudflare/cloudflare-tunnel
+                version: 0.3.2
+                namespace: cloudflare-tunnel
+                values: |
+                  cloudflare:
+                    account: "228f7adda0389734d880eeb14f621c5a"
+                    tunnelName: "home-cluster"
+                    tunnelId: "f0b9a1ae-1ea3-417c-92e3-14eb295813f7"
+                    secretName: cloudflare-tunnel-secrets
+                    enableWarp: false
+
+                    # This seems to not working, set the same rules on cloudflare tunnel config page
+                    # ingress:
+                    #   # ArgoCD Admin UI - Direct access
+                    #   - hostname: argocd.duytran.app
+                    #     service: http://argocd-server.argocd:80
+                    #   # All other services - Route through Traefik ingress controller
+                    #   - hostname: "*.duytran.app"
+                    #     service: http://traefik.traefik:80
         api:
           k0sApiPort: 9443
           port: 6443
