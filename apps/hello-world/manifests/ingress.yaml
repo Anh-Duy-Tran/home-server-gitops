@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: hello.local
+    - host: hello.duytran.app
       http:
         paths:
           - path: /
@@ -18,4 +18,3 @@ spec:
                 name: hello-world
                 port:
                   number: 80
-
