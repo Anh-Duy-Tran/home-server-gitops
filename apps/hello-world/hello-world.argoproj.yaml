@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/Anh-Duy-Tran/home-server-gitops.git
-    path: apps/hello-world/k8s
+    path: apps/hello-world/manifests
     targetRevision: HEAD
   destination:
     server: https://kubernetes.default.svc
