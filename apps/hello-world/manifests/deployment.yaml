@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: hello-world
-          image: duytran410/hello-world:v20251016-013743-435b038
+          image: duytran410/hello-world:v20251016-014522-807661a
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
