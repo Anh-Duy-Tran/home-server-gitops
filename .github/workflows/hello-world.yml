@@ -18,7 +18,7 @@ jobs:
     with:
       app_name: hello-world
       app_path: apps/hello-world
-      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_username: duytran410
     secrets:
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
