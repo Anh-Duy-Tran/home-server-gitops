@@ -23,7 +23,7 @@ jobs:
 
       - name: Update manifest
         run: |
-          sed -i "s|image: .*/$(basename ${{ inputs.image_name }}):.*|image: ${{ inputs.image_name }}:${{ inputs.image_tag }}|g" ${{ inputs.manifest_path }}
+          sed -i "s|image:.*|image: ${{ inputs.image_name }}:${{ inputs.image_tag }}|g" ${{ inputs.manifest_path }}
           echo "Updated manifest:"
           grep "image:" ${{ inputs.manifest_path }}
 
