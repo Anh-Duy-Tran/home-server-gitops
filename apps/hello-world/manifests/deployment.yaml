@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: hello-world
-          image: :v20251016-012432-ae85c01
+          image: v20251016-012432-ae85c01
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -43,4 +43,3 @@ spec:
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 5
-

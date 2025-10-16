@@ -18,8 +18,8 @@ jobs:
     with:
       app_name: hello-world
       app_path: apps/hello-world
-    secrets:
       docker_username: ${{ secrets.DOCKER_USERNAME }}
+    secrets:
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
 
   deploy:
