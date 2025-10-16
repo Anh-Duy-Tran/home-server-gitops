@@ -42,6 +42,8 @@ spec:
                 url: https://traefik.github.io/charts
               - name: metallb
                 url: https://metallb.github.io/metallb
+              - name: openebs
+                url: "https://openebs.github.io/charts"
               - name: argocd
                 url: https://argoproj.github.io/argo-helm
               - name: cloudflare
@@ -67,6 +69,17 @@ spec:
                     kubernetesIngress:
                       publishedService:
                         enabled: true
+              - name: openebs
+                chartname: openebs/openebs
+                version: 3.10.0
+                namespace: openebs
+                order: 1
+                values: |
+                  localprovisioner:
+                    hostpathClass:
+                      enabled: true
+                      isDefaultClass: true
+                    basePath: /var/openebs/local
               - name: argocd
                 order: 3
                 chartname: argocd/argo-cd
@@ -80,7 +93,7 @@ spec:
                     params:
                       server.insecure: true
               - name: cloudflare-tunnel
-                order: 4
+                order: 3
                 chartname: cloudflare/cloudflare-tunnel
                 version: 0.3.2
                 namespace: cloudflare-tunnel
