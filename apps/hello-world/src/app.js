@@ -4,7 +4,7 @@ const port = process.env.PORT || 3000;
 
 app.get("/", (_req, res) => {
   res.json({
-    message: "Hello from GitOps! Auto-deployed by ArgoCD!",
+    message: "HI ZINNN ILUUU",
     hostname: require("os").hostname(),
     version: "2.0.0",
     timestamp: new Date().toISOString(),
