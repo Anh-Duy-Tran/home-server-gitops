@@ -2,7 +2,7 @@
 > cloudflared tunnel login
 ```
 
-Get the tunnel id with
+Tunnel should be created with CLI to have local configuration enabled (reading from configmap) Get the tunnel id with
 
 ```
 > cloudflared tunnel list

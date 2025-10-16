@@ -87,8 +87,8 @@ spec:
                 values: |
                   cloudflare:
                     account: "228f7adda0389734d880eeb14f621c5a"
-                    tunnelName: "kluster-tunnel"
-                    tunnelId: "bb6eb05e-b660-4231-ab66-217a834347b9"
+                    tunnelName: "super-cluster-tunnel"
+                    tunnelId: "4a026bef-fd4f-46d4-9f1c-39fb5be523ca"
                     secretName: cloudflare-tunnel-secrets
                     enableWarp: false
                     ingress:
