@@ -87,19 +87,17 @@ spec:
                 values: |
                   cloudflare:
                     account: "228f7adda0389734d880eeb14f621c5a"
-                    tunnelName: "home-cluster"
-                    tunnelId: "f0b9a1ae-1ea3-417c-92e3-14eb295813f7"
+                    tunnelName: "kluster-tunnel"
+                    tunnelId: "bb6eb05e-b660-4231-ab66-217a834347b9"
                     secretName: cloudflare-tunnel-secrets
                     enableWarp: false
-
-                    # This seems to not working, set the same rules on cloudflare tunnel config page
-                    # ingress:
-                    #   # ArgoCD Admin UI - Direct access
-                    #   - hostname: argocd.duytran.app
-                    #     service: http://argocd-server.argocd:80
-                    #   # All other services - Route through Traefik ingress controller
-                    #   - hostname: "*.duytran.app"
-                    #     service: http://traefik.traefik:80
+                    ingress:
+                      # ArgoCD Admin UI - Direct access
+                      - hostname: argocd.duytran.app
+                        service: http://argocd-server.argocd:80
+                      # All other services - Route through Traefik ingress controller
+                      - hostname: "*.duytran.app"
+                        service: http://traefik.traefik:80
         api:
           k0sApiPort: 9443
           port: 6443
