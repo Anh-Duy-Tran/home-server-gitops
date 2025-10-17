@@ -1,0 +1,11 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: manual-backup-TIMESTAMP
+  namespace: velero
+spec:
+  includedNamespaces:
+    - argocd
+    - default
+  storageLocation: default
+  ttl: 720h0m0s  # Keep for 30 days

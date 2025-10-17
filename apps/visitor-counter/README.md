@@ -74,9 +74,27 @@ curl http://counter.duytran.app/reset
 
 ## What Happens During Cluster Reset
 
-1. **Before reset**: Data is in `/var/openebs/local/pvc-xxxxx/` on host
-2. **After `k0sctl reset`**: Kubernetes cluster is destroyed but `/var/openebs/local/` remains
-3. **After redeployment**: OpenEBS recreates the PV and reconnects to existing data
+1. **Before reset**: Data is in `/var/openebs/visitor-counter-data/` on host (static path)
+2. **After `k0sctl reset`**: Kubernetes cluster is destroyed but `/var/openebs/visitor-counter-data/` remains
+3. **After redeployment**:
+   - k0s automatically creates the static PV pointing to `/var/openebs/visitor-counter-data/`
+   - PVC binds to the pre-existing PV
+   - Counter data is restored automatically
 4. **Result**: Counter continues from previous value!
 
-**Note**: This works because OpenEBS stores data OUTSIDE the k0s directory (`/var/lib/k0s/`).
+**How it works:**
+- Static PV is deployed via k0sctl (in `k8s/visitor-counter-pv.yaml`)
+- PV always points to the same directory: `/var/openebs/visitor-counter-data/`
+- No dynamic PVC IDs - same path every time!
+- 100% reproducible across cluster resets
+
+**To migrate to another host:**
+```bash
+# On old host
+sudo tar -czf visitor-counter-backup.tar.gz /var/openebs/visitor-counter-data/
+
+# On new host (update node name in k8s/visitor-counter-pv.yaml first)
+sudo mkdir -p /var/openebs/
+sudo tar -xzf visitor-counter-backup.tar.gz -C /
+# Then run k0sctl apply
+```

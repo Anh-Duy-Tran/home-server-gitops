@@ -27,6 +27,14 @@ spec:
           src: ./cloudflare-tunnel/cloudflare-tunnel.secrets.yaml
           dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
           perm: 0644
+        - name: visitor-counter-pv
+          src: ./visitor-counter-pv.yaml
+          dstDir: /var/lib/k0s/manifests/storage/
+          perm: 0644
+        - name: velero-auto-restore
+          src: ./velero/auto-restore-config.yaml
+          dstDir: /var/lib/k0s/manifests/velero/
+          perm: 0644
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -48,6 +56,10 @@ spec:
                 url: https://argoproj.github.io/argo-helm
               - name: cloudflare
                 url: https://cloudflare.github.io/helm-charts
+              - name: minio
+                url: https://charts.min.io/
+              - name: vmware-tanzu
+                url: https://vmware-tanzu.github.io/helm-charts
             charts:
               - name: metallb
                 order: 1
@@ -111,6 +123,82 @@ spec:
                       # All other services - Route through Traefik ingress controller
                       - hostname: "*.duytran.app"
                         service: http://traefik.traefik:80
+              - name: minio
+                order: 2
+                chartname: minio/minio
+                version: 5.2.0
+                namespace: minio
+                values: |
+                  mode: standalone
+                  replicas: 1
+                  persistence:
+                    enabled: true
+                    storageClass: openebs-hostpath
+                    size: 50Gi
+                  resources:
+                    requests:
+                      memory: 512Mi
+                      cpu: 100m
+                    limits:
+                      memory: 2Gi
+                      cpu: 1000m
+                  rootUser: minioadmin
+                  rootPassword: minioadmin123
+                  service:
+                    type: ClusterIP
+                  consoleService:
+                    type: LoadBalancer
+                  buckets:
+                    - name: velero
+                      policy: none
+                      purge: false
+                    - name: k8s-backups
+                      policy: none
+                      purge: false
+              - name: velero
+                order: 4
+                chartname: vmware-tanzu/velero
+                version: 7.2.1
+                namespace: velero
+                values: |
+                  upgradeCRDs: false
+                  cleanUpCRDs: false
+                  configuration:
+                    backupStorageLocation:
+                      - name: default
+                        provider: aws
+                        bucket: velero
+                        config:
+                          region: minio
+                          s3ForcePathStyle: "true"
+                          s3Url: http://minio.minio:9000
+                    volumeSnapshotLocation:
+                      - name: default
+                        provider: aws
+                        config:
+                          region: minio
+                  credentials:
+                    useSecret: true
+                    secretContents:
+                      cloud: |
+                        [default]
+                        aws_access_key_id=minioadmin
+                        aws_secret_access_key=minioadmin123
+                  initContainers:
+                    - name: velero-plugin-for-aws
+                      image: velero/velero-plugin-for-aws:v1.10.0
+                      volumeMounts:
+                        - mountPath: /target
+                          name: plugins
+                  schedules:
+                    daily-backup:
+                      disabled: false
+                      schedule: "0 2 * * *"
+                      template:
+                        ttl: "720h"
+                        includedNamespaces:
+                          - argocd
+                          - default
         api:
           k0sApiPort: 9443
           port: 6443
