@@ -31,10 +31,14 @@ spec:
           src: ./visitor-counter-pv.yaml
           dstDir: /var/lib/k0s/manifests/storage/
           perm: 0644
-        - name: velero-auto-restore
-          src: ./velero/auto-restore-config.yaml
-          dstDir: /var/lib/k0s/manifests/velero/
+        - name: minio-persistent-pv
+          src: ./minio/minio-persistent-pv.yaml
+          dstDir: /var/lib/k0s/manifests/storage/
           perm: 0644
+        # - name: velero-auto-restore
+        #   src: ./velero/auto-restore-config.yaml
+        #   dstDir: /var/lib/k0s/manifests/velero/
+        #   perm: 0644
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -133,8 +137,7 @@ spec:
                   replicas: 1
                   persistence:
                     enabled: true
-                    storageClass: openebs-hostpath
-                    size: 50Gi
+                    existingClaim: minio
                   resources:
                     requests:
                       memory: 512Mi
