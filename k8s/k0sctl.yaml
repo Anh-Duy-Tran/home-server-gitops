@@ -24,7 +24,7 @@ spec:
           dstDir: /var/lib/k0s/manifests/metallb/
           perm: 0644
         - name: cloudflare-tunnel-secrets
-          src: ./cloudflare-tunnel/cloudflare-tunnel.secrets.yaml
+          src: ./cloudflare-tunnel/cloudflare-tunnel-secret.yaml
           dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
           perm: 0644
         - name: minio-persistent-pv

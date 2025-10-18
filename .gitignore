@@ -1,1 +1,6 @@
-/k8s/cloudflare-tunnel/cloudflare-tunnel.secrets.yaml
+*secret*.*
+!*.template
+
+# To be more specific
+cloudflare-tunnel.secrets.yaml
+dockerhub-secret.yaml

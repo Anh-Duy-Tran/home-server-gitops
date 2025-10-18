@@ -1,14 +1,13 @@
 apiVersion: velero.io/v1
 kind: Backup
 metadata:
-  name: manual-backup-{{ datetime }}
+  name: manual-backup-2025-10-18-16-37
   namespace: velero
 spec:
   includedNamespaces:
     - stateful-apps
-  # Include pods to detect backup-volumes annotation, PVCs for volume data
+  # Only backup persistent volume data, not Kubernetes manifests (managed by GitOps)
   includedResources:
-    - pods
     - persistentvolumeclaims
     - persistentvolumes
   storageLocation: default
