@@ -2,9 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: visitor-counter
-  namespace: default
-  labels:
-    app: visitor-counter
 spec:
   replicas: 1
   selector:
