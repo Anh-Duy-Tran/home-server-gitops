@@ -15,7 +15,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain # Keep data on cluster reset!
   storageClassName: minio-local-storage
   hostPath:
-    path: /var/k8s-persistent-data/minio # Fixed path
+    path: /var/k8s-persistent-data/minio
     type: DirectoryOrCreate
   nodeAffinity:
     required:
@@ -24,7 +24,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - alarm # Your node hostname
+                - alarm # UPDATE THIS: Match your node hostname
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

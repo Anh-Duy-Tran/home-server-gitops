@@ -27,18 +27,14 @@ spec:
           src: ./cloudflare-tunnel/cloudflare-tunnel.secrets.yaml
           dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
           perm: 0644
-        - name: visitor-counter-pv
-          src: ./visitor-counter-pv.yaml
-          dstDir: /var/lib/k0s/manifests/storage/
-          perm: 0644
         - name: minio-persistent-pv
           src: ./minio/minio-persistent-pv.yaml
           dstDir: /var/lib/k0s/manifests/storage/
           perm: 0644
-        # - name: velero-auto-restore
-        #   src: ./velero/auto-restore-config.yaml
-        #   dstDir: /var/lib/k0s/manifests/velero/
-        #   perm: 0644
+        - name: velero-auto-restore
+          src: ./velero/auto-restore-config.yaml
+          dstDir: /var/lib/k0s/manifests/velero/
+          perm: 0644
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
@@ -70,6 +66,17 @@ spec:
                 chartname: metallb/metallb
                 version: 0.15.2
                 namespace: metallb-system
+              - name: openebs
+                chartname: openebs/openebs
+                version: 3.10.0
+                namespace: openebs
+                order: 1
+                values: |
+                  localprovisioner:
+                    hostpathClass:
+                      enabled: true
+                      isDefaultClass: true
+                    basePath: /var/openebs/local
               - name: traefik
                 order: 2
                 chartname: traefik/traefik
@@ -85,48 +92,6 @@ spec:
                     kubernetesIngress:
                       publishedService:
                         enabled: true
-              - name: openebs
-                chartname: openebs/openebs
-                version: 3.10.0
-                namespace: openebs
-                order: 1
-                values: |
-                  localprovisioner:
-                    hostpathClass:
-                      enabled: true
-                      isDefaultClass: true
-                    basePath: /var/openebs/local
-              - name: argocd
-                order: 3
-                chartname: argocd/argo-cd
-                version: 7.7.12
-                namespace: argocd
-                values: |
-                  server:
-                    service:
-                      type: LoadBalancer
-                  configs:
-                    params:
-                      server.insecure: true
-              - name: cloudflare-tunnel
-                order: 3
-                chartname: cloudflare/cloudflare-tunnel
-                version: 0.3.2
-                namespace: cloudflare-tunnel
-                values: |
-                  cloudflare:
-                    account: "228f7adda0389734d880eeb14f621c5a"
-                    tunnelName: "super-cluster-tunnel"
-                    tunnelId: "4a026bef-fd4f-46d4-9f1c-39fb5be523ca"
-                    secretName: cloudflare-tunnel-secrets
-                    enableWarp: false
-                    ingress:
-                      # ArgoCD Admin UI - Direct access
-                      - hostname: argocd.duytran.app
-                        service: http://argocd-server.argocd:80
-                      # All other services - Route through Traefik ingress controller
-                      - hostname: "*.duytran.app"
-                        service: http://traefik.traefik:80
               - name: minio
                 order: 2
                 chartname: minio/minio
@@ -155,17 +120,18 @@ spec:
                     - name: velero
                       policy: none
                       purge: false
-                    - name: k8s-backups
-                      policy: none
-                      purge: false
               - name: velero
-                order: 4
+                order: 3
                 chartname: vmware-tanzu/velero
                 version: 7.2.1
                 namespace: velero
                 values: |
                   upgradeCRDs: false
                   cleanUpCRDs: false
+                  # Enable node-agent for file-system backups
+                  deployNodeAgent: true
+                  nodeAgent:
+                    podVolumePath: /var/lib/k0s/kubelet/pods
                   configuration:
                     backupStorageLocation:
                       - name: default
@@ -200,8 +166,44 @@ spec:
                       template:
                         ttl: "720h"
                         includedNamespaces:
-                          - argocd
-                          - default
+                          - stateful-apps
+                        # Only backup PVC data, not manifests (managed by GitOps)
+                        includedResources:
+                          - persistentvolumeclaims
+                          - persistentvolumes
+                        # Enable file-system backup for all PVCs
+                        defaultVolumesToFsBackup: true
+              - name: argocd
+                order: 4
+                chartname: argocd/argo-cd
+                version: 7.7.12
+                namespace: argocd
+                values: |
+                  server:
+                    service:
+                      type: LoadBalancer
+                  configs:
+                    params:
+                      server.insecure: true
+              - name: cloudflare-tunnel
+                order: 4
+                chartname: cloudflare/cloudflare-tunnel
+                version: 0.3.2
+                namespace: cloudflare-tunnel
+                values: |
+                  cloudflare:
+                    account: "228f7adda0389734d880eeb14f621c5a"
+                    tunnelName: "super-cluster-tunnel"
+                    tunnelId: "4a026bef-fd4f-46d4-9f1c-39fb5be523ca"
+                    secretName: cloudflare-tunnel-secrets
+                    enableWarp: false
+                    ingress:
+                      # ArgoCD Admin UI - Direct access
+                      - hostname: argocd.duytran.app
+                        service: http://argocd-server.argocd:80
+                      # All other services - Route through Traefik ingress controller
+                      - hostname: "*.duytran.app"
+                        service: http://traefik.traefik:80
         api:
           k0sApiPort: 9443
           port: 6443

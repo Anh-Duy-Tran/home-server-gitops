@@ -4,185 +4,117 @@ metadata:
   name: velero
 ---
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: velero-restore-config
-  namespace: velero
-data:
-  # Set to "true" to automatically restore from latest backup on cluster startup
-  AUTO_RESTORE: "true"
-
-  # Backup source - change per environment
-  # Local: uses Minio (default)
-  # Cloud: change to s3://your-bucket/path
-  BACKUP_SOURCE: "minio"
-
-  # Which namespaces to restore
-  RESTORE_NAMESPACES: "argocd,default"
-
-  # Restore behavior
-  # - latest: restore from most recent backup
-  # - specific: restore from backup named in BACKUP_NAME
-  RESTORE_MODE: "latest"
-
-  # Only used if RESTORE_MODE=specific
-  BACKUP_NAME: ""
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: velero-restore-job
   namespace: velero
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: Role
 metadata:
+  name: velero-restore-job
+  namespace: velero
+rules:
+  - apiGroups: ["velero.io"]
+    resources: ["backups", "restores"]
+    verbs: ["get", "list", "create"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: velero-restore-job
+  namespace: velero
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
   name: velero-restore-job
 subjects:
   - kind: ServiceAccount
     name: velero-restore-job
     namespace: velero
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin
-  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: velero-auto-restore
   namespace: velero
-  annotations:
-    # Run this job after Velero is deployed
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "5"
 spec:
-  ttlSecondsAfterFinished: 300
-  backoffLimit: 3
   template:
-    metadata:
-      name: velero-auto-restore
     spec:
       serviceAccountName: velero-restore-job
-      restartPolicy: OnFailure
       initContainers:
-        # Wait for Velero to be ready
         - name: wait-for-velero
           image: bitnami/kubectl:latest
           command:
             - /bin/bash
             - -c
             - |
-              echo "Waiting for Velero pod to be ready..."
-              kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=velero -n velero --timeout=300s
+              set -e
+              echo "Waiting for Velero deployment to exist..."
+
+              # Wait for velero deployment to exist (up to 5 minutes)
+              for i in {1..60}; do
+                if kubectl get deployment velero -n velero >/dev/null 2>&1; then
+                  echo "Velero deployment found!"
+                  break
+                fi
+                echo "Waiting for Velero deployment to be created... ($i/60)"
+                sleep 5
+              done
+
+              # Verify deployment exists
+              if ! kubectl get deployment velero -n velero >/dev/null 2>&1; then
+                echo "ERROR: Velero deployment not found after 5 minutes"
+                exit 1
+              fi
+
+              echo "Waiting for Velero deployment to be ready..."
+              kubectl wait --for=condition=available --timeout=300s deployment/velero -n velero
+
+              echo "Waiting for Velero pods to be running..."
+              kubectl wait --for=condition=ready --timeout=60s pod -l app.kubernetes.io/name=velero -n velero
+
               echo "Velero is ready!"
       containers:
-        - name: auto-restore
+        - name: restore
           image: bitnami/kubectl:latest
-          env:
-            - name: AUTO_RESTORE
-              valueFrom:
-                configMapKeyRef:
-                  name: velero-restore-config
-                  key: AUTO_RESTORE
-            - name: RESTORE_MODE
-              valueFrom:
-                configMapKeyRef:
-                  name: velero-restore-config
-                  key: RESTORE_MODE
-            - name: BACKUP_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: velero-restore-config
-                  key: BACKUP_NAME
-            - name: RESTORE_NAMESPACES
-              valueFrom:
-                configMapKeyRef:
-                  name: velero-restore-config
-                  key: RESTORE_NAMESPACES
           command:
             - /bin/bash
             - -c
             - |
               set -e
+              echo "Fetching latest backup..."
 
-              echo "=== Velero Auto-Restore Job ==="
-              echo "AUTO_RESTORE: $AUTO_RESTORE"
-              echo "RESTORE_MODE: $RESTORE_MODE"
-              echo ""
+              # Get the latest backup name using kubectl
+              LATEST=$(kubectl get backups.velero.io -n velero -o json | \
+                jq -r '.items | sort_by(.status.completionTimestamp) | last | .metadata.name')
 
-              # Check if auto-restore is enabled
-              if [ "$AUTO_RESTORE" != "true" ]; then
-                echo "Auto-restore is disabled. Skipping."
-                exit 0
+              if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
+                echo "No backups found!"
+                exit 1
               fi
 
-              # Install Velero CLI
-              echo "Installing Velero CLI..."
-              cd /tmp
-              wget -q https://github.com/vmware-tanzu/velero/releases/download/v1.14.1/velero-v1.14.1-linux-amd64.tar.gz
-              tar -xzf velero-v1.14.1-linux-amd64.tar.gz
-              mv velero-v1.14.1-linux-amd64/velero /usr/local/bin/
-              chmod +x /usr/local/bin/velero
+              echo "Creating restore from backup: $LATEST"
 
-              # Wait a bit more for Velero to fully initialize
-              echo "Waiting for Velero to fully initialize..."
-              sleep 10
+              # Create a restore resource
+              cat <<EOF | kubectl apply -f -
+              apiVersion: velero.io/v1
+              kind: Restore
+              metadata:
+                name: auto-restore-$(date +%s)
+                namespace: velero
+              spec:
+                backupName: $LATEST
+                includedNamespaces:
+                - '*'
+              EOF
 
-              # Check for existing backups
-              echo "Checking for available backups..."
-              if ! velero backup get --namespace velero &>/dev/null; then
-                echo "No backups found. Starting fresh cluster."
-                exit 0
-              fi
-
-              BACKUP_COUNT=$(velero backup get --namespace velero -o json 2>/dev/null | grep -c '"name":' || echo "0")
-
-              if [ "$BACKUP_COUNT" -eq 0 ]; then
-                echo "No backups available. Starting fresh cluster."
-                exit 0
-              fi
-
-              echo "Found $BACKUP_COUNT backup(s)"
-
-              # Determine which backup to restore
-              if [ "$RESTORE_MODE" = "latest" ]; then
-                BACKUP_TO_RESTORE=$(velero backup get --namespace velero -o json | \
-                  grep '"name":' | head -1 | sed 's/.*"name": "\(.*\)".*/\1/')
-                echo "Using latest backup: $BACKUP_TO_RESTORE"
-              else
-                BACKUP_TO_RESTORE="$BACKUP_NAME"
-                echo "Using specific backup: $BACKUP_TO_RESTORE"
-              fi
-
-              # Check if already restored
-              RESTORE_NAME="auto-restore-$(echo $BACKUP_TO_RESTORE | sed 's/cluster-backup-//')"
-              if velero restore get $RESTORE_NAME --namespace velero &>/dev/null; then
-                echo "Restore '$RESTORE_NAME' already exists. Skipping."
-                exit 0
-              fi
-
-              # Perform restore
-              echo ""
-              echo "🔄 Restoring from backup: $BACKUP_TO_RESTORE"
-              echo "   Namespaces: $RESTORE_NAMESPACES"
-              echo ""
-
-              velero restore create $RESTORE_NAME \
-                --from-backup $BACKUP_TO_RESTORE \
-                --namespace velero \
-                --wait
-
-              echo ""
-              echo "✅ Restore completed successfully!"
-              echo ""
-
-              # Show restored resources
-              echo "=== Restored Resources ==="
-              if echo "$RESTORE_NAMESPACES" | grep -q "argocd"; then
-                echo "ArgoCD:"
-                kubectl get pods,pvc -n argocd 2>/dev/null || echo "  (not yet ready)"
-              fi
-
-              echo ""
-              echo "Cluster is ready with restored data!"
+              echo "Restore initiated successfully!"
+      restartPolicy: OnFailure
+  backoffLimit: 3
