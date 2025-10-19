@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+commonLabels:
+  app: photobook
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+images:
+  - name: photobook
+    newName: your-registry/photobook
+    newTag: latest

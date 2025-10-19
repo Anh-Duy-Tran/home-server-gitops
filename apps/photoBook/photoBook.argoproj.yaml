@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: photobook
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Anh-Duy-Tran/home-server-gitops.git
+    path: apps/photoBook/manifests
+    targetRevision: HEAD
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
