@@ -13,4 +13,4 @@ resources:
 
 images:
   - name: duytran410/photobook
-    newTag: latest
+    newTag: v20251019-070418-adf4e0e
