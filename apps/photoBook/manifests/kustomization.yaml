@@ -12,6 +12,5 @@ resources:
   - ingress.yaml
 
 images:
-  - name: photobook
-    newName: your-registry/photobook
+  - name: duytran410/photobook
     newTag: latest
