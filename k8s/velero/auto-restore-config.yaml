@@ -102,12 +102,13 @@ spec:
 
               echo "Creating restore from backup: $LATEST"
 
-              # Create a restore resource
+              # Create a restore resource (include pods to restore volume data)
+              RESTORE_NAME="auto-restore-$(date +%s)"
               cat <<EOF | kubectl apply -f -
               apiVersion: velero.io/v1
               kind: Restore
               metadata:
-                name: auto-restore-$(date +%s)
+                name: $RESTORE_NAME
                 namespace: velero
               spec:
                 backupName: $LATEST
@@ -115,6 +116,12 @@ spec:
                 - '*'
               EOF
 
-              echo "Restore initiated successfully!"
+              echo "Waiting for restore to complete..."
+              kubectl wait --for=condition=complete restore/$RESTORE_NAME -n velero --timeout=10m || true
+
+              echo "Waiting for volume restores to complete..."
+              kubectl wait --for=jsonpath='{.status.phase}'=Completed podvolumerestore -n velero --all --timeout=10m || true
+
+              echo "Restore completed! PVCs restored with data. ArgoCD will recreate apps."
       restartPolicy: OnFailure
   backoffLimit: 3

@@ -24,7 +24,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - alarm # UPDATE THIS: Match your node hostname
+                - ubuntu-s-2vcpu-4gb-fra1-01 # UPDATE THIS: Match your node hostname
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

@@ -7,22 +7,18 @@ spec:
   hosts:
     - role: single
       ssh:
-        address: 192.168.50.240
-        user: duytran
+        address: 167.99.131.174
+        user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
       installFlags:
         - --debug
-      hooks:
-        # Comment this out if the target host doesn't have firewall problem
-        apply:
-          before:
-            - sudo iptables-restore < /etc/iptables/iptables.rules
+      # Comment this out if the target host doesn't have firewall problem
+      # hooks:
+      # apply:
+      # before:
+      # - sudo iptables-restore < /etc/iptables/iptables.rules
       files:
-        - name: metallb-ipaddresspool
-          src: ./metallb/IPAddressPool.yaml
-          dstDir: /var/lib/k0s/manifests/metallb/
-          perm: 0644
         - name: cloudflare-tunnel-secrets
           src: ./cloudflare-tunnel/cloudflare-tunnel-secret.yaml
           dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
@@ -48,8 +44,6 @@ spec:
             repositories:
               - name: traefik
                 url: https://traefik.github.io/charts
-              - name: metallb
-                url: https://metallb.github.io/metallb
               - name: openebs
                 url: "https://openebs.github.io/charts"
               - name: argocd
@@ -61,11 +55,6 @@ spec:
               - name: vmware-tanzu
                 url: https://vmware-tanzu.github.io/helm-charts
             charts:
-              - name: metallb
-                order: 1
-                chartname: metallb/metallb
-                version: 0.15.2
-                namespace: metallb-system
               - name: openebs
                 chartname: openebs/openebs
                 version: 3.10.0
@@ -88,6 +77,8 @@ spec:
                     - --api
                     - --api.dashboard=true
                     - --api.insecure=true
+                  service:
+                    type: ClusterIP
                   providers:
                     kubernetesIngress:
                       publishedService:
@@ -115,7 +106,7 @@ spec:
                   service:
                     type: ClusterIP
                   consoleService:
-                    type: LoadBalancer
+                    type: ClusterIP
                   buckets:
                     - name: velero
                       policy: none
@@ -167,8 +158,9 @@ spec:
                         ttl: "720h"
                         includedNamespaces:
                           - stateful-apps
-                        # Only backup PVC data, not manifests (managed by GitOps)
+                        # Only backup volume data (pods needed for PodVolumeBackup)
                         includedResources:
+                          - pods
                           - persistentvolumeclaims
                           - persistentvolumes
                         # Enable file-system backup for all PVCs
@@ -181,7 +173,7 @@ spec:
                 values: |
                   server:
                     service:
-                      type: LoadBalancer
+                      type: ClusterIP
                   configs:
                     params:
                       server.insecure: true
