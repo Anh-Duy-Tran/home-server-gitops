@@ -1,9 +1,9 @@
-name: Update Manifest
+name: Update Kustomization
 
 on:
   workflow_call:
     inputs:
-      manifest_path:
+      kustomization_path:
         required: true
         type: string
       image_name:
@@ -23,17 +23,17 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update manifest
+      - name: Update kustomization
         run: |
-          sed -i "s|image:.*|image: ${{ inputs.image_name }}:${{ inputs.image_tag }}|g" ${{ inputs.manifest_path }}
-          echo "Updated manifest:"
-          grep "image:" ${{ inputs.manifest_path }}
+          sed -i "s|newTag:.*|newTag: ${{ inputs.image_tag }}|g" ${{ inputs.kustomization_path }}
+          echo "Updated kustomization:"
+          grep -A2 "images:" ${{ inputs.kustomization_path }}
 
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ${{ inputs.manifest_path }}
+          git add ${{ inputs.kustomization_path }}
           git diff --staged --quiet || (
             git commit -m "ci: update image to ${{ inputs.image_tag }}" &&
             git push

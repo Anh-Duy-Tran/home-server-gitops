@@ -24,8 +24,8 @@ jobs:
 
   deploy:
     needs: build
-    uses: ./.github/workflows/update-manifest.yml
+    uses: ./.github/workflows/update-kustomization.yml
     with:
-      manifest_path: apps/visitor-counter/manifests/deployment.yaml
+      kustomization_path: apps/visitor-counter/manifests/kustomization.yaml
       image_name: ${{ needs.build.outputs.image_name }}
       image_tag: ${{ needs.build.outputs.image_tag }}

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: photobook
-          image: duytran410/photobook:v20251019-065106-911c489
+          image: duytran410/photobook
           ports:
             - containerPort: 80
           resources:

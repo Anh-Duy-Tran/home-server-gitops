@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: visitor-counter
-          image: duytran410/visitor-counter:latest
+          image: duytran410/visitor-counter
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

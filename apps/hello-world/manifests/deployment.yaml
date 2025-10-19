@@ -2,9 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-world
-  namespace: default
-  labels:
-    app: hello-world
 spec:
   replicas: 2
   selector:
@@ -17,7 +14,7 @@ spec:
     spec:
       containers:
         - name: hello-world
-          image: duytran410/hello-world:v20251016-014522-807661a
+          image: duytran410/hello-world
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
