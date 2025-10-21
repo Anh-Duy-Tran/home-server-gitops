@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kuberay-operator
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://ray-project.github.io/kuberay-helm/
+    targetRevision: 1.2.2
+    chart: kuberay-operator
+    helm:
+      values: |
+        image:
+          repository: quay.io/kuberay/operator
+          tag: v1.2.2
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ray-system
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
