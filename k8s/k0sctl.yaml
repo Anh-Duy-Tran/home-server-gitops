@@ -5,14 +5,40 @@ metadata:
   user: admin
 spec:
   hosts:
-    - role: controller
+    # - role: controller
+    #   ssh:
+    #     address: 167.99.131.174
+    #     user: root
+    #     port: 22
+    #     keyPath: ~/.ssh/id_rsa
+    #   installFlags:
+    #     - --debug
+    #   files:
+    #     - name: cloudflare-tunnel-secrets
+    #       src: ./cloudflare-tunnel/cloudflare-tunnel-secret.yaml
+    #       dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
+    #       perm: 0644
+    #     - name: minio-persistent-pv
+    #       src: ./minio/minio-persistent-pv.yaml
+    #       dstDir: /var/lib/k0s/manifests/storage/
+    #       perm: 0644
+    #     - name: velero-auto-restore
+    #       src: ./velero/auto-restore-config.yaml
+    #       dstDir: /var/lib/k0s/manifests/velero/
+    #       perm: 0644
+    - role: single
       ssh:
-        address: 167.99.131.174
-        user: root
+        address: 192.168.50.240
+        user: duytran
         port: 22
         keyPath: ~/.ssh/id_rsa
       installFlags:
         - --debug
+      # Comment this out if the target host doesn't have firewall problem
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
       files:
         - name: cloudflare-tunnel-secrets
           src: ./cloudflare-tunnel/cloudflare-tunnel-secret.yaml
@@ -26,19 +52,6 @@ spec:
           src: ./velero/auto-restore-config.yaml
           dstDir: /var/lib/k0s/manifests/velero/
           perm: 0644
-    - role: worker
-      ssh:
-        address: 192.168.50.240
-        user: duytran
-        port: 22
-        keyPath: ~/.ssh/id_rsa
-      installFlags:
-        - --debug
-      # Comment this out if the target host doesn't have firewall problem
-      hooks:
-        apply:
-          before:
-            - sudo iptables-restore < /etc/iptables/iptables.rules
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
