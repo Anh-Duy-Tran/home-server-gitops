@@ -1,21 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ray
+  name: ray-jupyter
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2" # Apply after ray cluster (wave 1)
 spec:
   project: default
 
   source:
-    repoURL: https://github.com/Anh-Duy-Tran/home-server-gitops.git # Update with your repo
+    repoURL: https://github.com/Anh-Duy-Tran/home-server-gitops.git
     targetRevision: main
-    path: apps/ray
+    path: apps/ray/manifests
     directory:
-      include: "{operator,cluster,jupyter}.yaml"
+      include: jupyter-deployment.yaml
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: ray-system
 
   syncPolicy:
     automated:
