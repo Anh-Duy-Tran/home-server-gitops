@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jupyter-ray
-  namespace: ray-system
+  namespace: stateful-apps
 spec:
   replicas: 1
   selector:
@@ -33,13 +33,33 @@ spec:
               memory: "2Gi"
           env:
             - name: RAY_ADDRESS
-              value: "ray://raycluster-sample-head-svc:10001"
+              value: "ray://raycluster-sample-head-svc.ray-system.svc.cluster.local:10001"
+          volumeMounts:
+            - name: notebooks
+              mountPath: /home/jovyan
+      volumes:
+        - name: notebooks
+          persistentVolumeClaim:
+            claimName: jupyter-notebooks
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jupyter-notebooks
+  namespace: stateful-apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: openebs-hostpath
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: jupyter-ray
-  namespace: ray-system
+  namespace: stateful-apps
 spec:
   selector:
     app: jupyter-ray
@@ -53,7 +73,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: jupyter-ray-netpol
-  namespace: ray-system
+  namespace: stateful-apps
 spec:
   podSelector:
     matchLabels:
@@ -61,23 +81,5 @@ spec:
   policyTypes:
     - Egress
   egress:
-    # Allow DNS resolution
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-      ports:
-        - protocol: UDP
-          port: 53
-    # Allow connection to Ray cluster only
-    - to:
-        - podSelector:
-            matchLabels:
-              ray.io/cluster: raycluster-sample
-      ports:
-        - protocol: TCP
-          port: 6379
-        - protocol: TCP
-          port: 10001
-        - protocol: TCP
-          port: 8265
+    # Allow all egress for pip installs and cross-namespace Ray connections
+    - {}
