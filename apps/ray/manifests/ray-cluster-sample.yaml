@@ -27,8 +27,8 @@ spec:
               - containerPort: 10001
                 name: client
   workerGroupSpecs:
-    - replicas: 1
-      minReplicas: 1
+    - replicas: 2
+      minReplicas: 2
       maxReplicas: 3
       groupName: small-group
       rayStartParams: {}
