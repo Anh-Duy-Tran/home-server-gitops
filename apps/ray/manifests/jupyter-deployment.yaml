@@ -36,7 +36,7 @@ spec:
               value: "ray://raycluster-sample-head-svc.ray-system.svc.cluster.local:10001"
           volumeMounts:
             - name: notebooks
-              mountPath: /home/jovyan
+              mountPath: /home/ray
       volumes:
         - name: notebooks
           persistentVolumeClaim:
