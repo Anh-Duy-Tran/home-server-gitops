@@ -9,7 +9,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/your-repo/PersonalCloud.git # Update with your repo
+    repoURL: https://github.com/Anh-Duy-Tran/home-server-gitops.git
     targetRevision: main
     path: apps/ray/manifests
     directory:
