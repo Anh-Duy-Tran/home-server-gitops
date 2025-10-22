@@ -71,6 +71,27 @@ spec:
   type: ClusterIP
 ---
 apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jupyter-ray
+  namespace: stateful-apps
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: jupyter.duytran.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jupyter-ray
+                port:
+                  number: 8888
+---
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: jupyter-ray-netpol
