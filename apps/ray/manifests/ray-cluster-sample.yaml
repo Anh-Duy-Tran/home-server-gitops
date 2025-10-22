@@ -14,10 +14,10 @@ spec:
             image: rayproject/ray:nightly-aarch64
             resources:
               limits:
-                cpu: "2"
+                cpu: "1"
                 memory: "2Gi"
               requests:
-                cpu: "1"
+                cpu: "500m"
                 memory: "1Gi"
             ports:
               - containerPort: 6379
@@ -28,7 +28,7 @@ spec:
                 name: client
   workerGroupSpecs:
     - replicas: 4
-      minReplicas: 3
+      minReplicas: 4
       maxReplicas: 5
       groupName: small-group
       rayStartParams: {}
@@ -39,8 +39,8 @@ spec:
               image: rayproject/ray:nightly-aarch64
               resources:
                 limits:
-                  cpu: "1"
+                  cpu: "2"
                   memory: "1Gi"
                 requests:
-                  cpu: "500m"
+                  cpu: "1"
                   memory: "512Mi"
