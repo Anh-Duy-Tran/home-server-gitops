@@ -27,9 +27,9 @@ spec:
               - containerPort: 10001
                 name: client
   workerGroupSpecs:
-    - replicas: 4
-      minReplicas: 4
-      maxReplicas: 5
+    - replicas: 2
+      minReplicas: 1
+      maxReplicas: 4
       groupName: small-group
       rayStartParams: {}
       template:
