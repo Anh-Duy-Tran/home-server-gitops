@@ -4,21 +4,21 @@ metadata:
   name: raycluster-sample
   namespace: ray-system
 spec:
-  rayVersion: "2.9.0"
+  rayVersion: "2.50.1"
   headGroupSpec:
     rayStartParams: {}
     template:
       spec:
         containers:
           - name: ray-head
-            image: rayproject/ray:nightly-aarch64
+            image: rayproject/ray:2.50.1-py311-gpu
             resources:
               limits:
+                cpu: "2"
+                memory: "4Gi"
+              requests:
                 cpu: "1"
                 memory: "2Gi"
-              requests:
-                cpu: "500m"
-                memory: "1Gi"
             ports:
               - containerPort: 6379
                 name: gcs-server
@@ -27,16 +27,16 @@ spec:
               - containerPort: 10001
                 name: client
   workerGroupSpecs:
-    - replicas: 2
-      minReplicas: 1
-      maxReplicas: 4
+    - replicas: 4
+      minReplicas: 2
+      maxReplicas: 6
       groupName: small-group
       rayStartParams: {}
       template:
         spec:
           containers:
             - name: ray-worker
-              image: rayproject/ray:nightly-aarch64
+              image: rayproject/ray:2.50.1-py311-gpu
               resources:
                 limits:
                   cpu: "2"
