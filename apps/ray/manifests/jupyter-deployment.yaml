@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: jupyter
-          image: rayproject/ray:nightly-aarch64
+          image: rayproject/ray:2.40.0
           command: ["/bin/bash", "-c"]
           args:
             - |
