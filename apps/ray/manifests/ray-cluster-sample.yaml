@@ -14,11 +14,11 @@ spec:
             image: rayproject/ray:2.50.1-py311-gpu
             resources:
               limits:
-                cpu: "2"
-                memory: "4Gi"
-              requests:
                 cpu: "1"
                 memory: "2Gi"
+              requests:
+                cpu: "500m"
+                memory: "1Gi"
             ports:
               - containerPort: 6379
                 name: gcs-server
@@ -27,9 +27,9 @@ spec:
               - containerPort: 10001
                 name: client
   workerGroupSpecs:
-    - replicas: 4
-      minReplicas: 2
-      maxReplicas: 6
+    - replicas: 2
+      minReplicas: 1
+      maxReplicas: 3
       groupName: small-group
       rayStartParams: {}
       template:
@@ -39,8 +39,8 @@ spec:
               image: rayproject/ray:2.50.1-py311-gpu
               resources:
                 limits:
-                  cpu: "2"
-                  memory: "1Gi"
-                requests:
                   cpu: "1"
-                  memory: "512Mi"
+                  memory: "2Gi"
+                requests:
+                  cpu: "500m"
+                  memory: "1Gi"
