@@ -1,3 +1,17 @@
-aws_region    = "us-east-1"
-instance_type = "t4g.small"
-ssh_key_name  = "your-key-name"
+# DigitalOcean API token
+# Get yours from: https://cloud.digitalocean.com/account/api/tokens
+do_token = "dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Region where resources will be created
+region = "fra1"
+
+# Droplet sizes (General Purpose tier)
+controller_size = "g-2vcpu-8gb"  # 2 vCPU, 8GB RAM
+worker_size     = "g-2vcpu-8gb"  # 2 vCPU, 8GB RAM
+
+# Number of worker nodes
+worker_count = 4
+
+# SSH key paths
+ssh_public_key_path  = "~/.ssh/id_rsa.pub"
+ssh_private_key_path = "~/.ssh/id_rsa"

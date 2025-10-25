@@ -1,17 +1,41 @@
-variable "aws_region" {
-  description = "AWS region"
+variable "do_token" {
+  description = "DigitalOcean API token"
   type        = string
-  default     = "us-east-1"
+  sensitive   = true
 }
 
-variable "instance_type" {
-  description = "EC2 instance type (Graviton ARM64)"
+variable "region" {
+  description = "DigitalOcean region"
   type        = string
-  default     = "t4g.small" # Free tier eligible until Dec 2025
-  # Other options: t4g.medium, t4g.large, c7g.medium, etc.
+  default     = "fra1" # Frankfurt
 }
 
-variable "ssh_key_name" {
-  description = "Name of the SSH key pair in AWS"
+variable "controller_size" {
+  description = "Droplet size for controller node"
   type        = string
+  default     = "g-2vcpu-8gb" # General Purpose: 2 vCPU, 8GB RAM
+}
+
+variable "worker_size" {
+  description = "Droplet size for worker nodes"
+  type        = string
+  default     = "g-2vcpu-8gb" # General Purpose: 2 vCPU, 8GB RAM
+}
+
+variable "worker_count" {
+  description = "Number of worker nodes"
+  type        = number
+  default     = 4
+}
+
+variable "ssh_public_key_path" {
+  description = "Path to SSH public key"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
+variable "ssh_private_key_path" {
+  description = "Path to SSH private key for provisioning"
+  type        = string
+  default     = "~/.ssh/id_rsa"
 }
