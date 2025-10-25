@@ -19,8 +19,21 @@ spec:
           command: ["/bin/bash", "-c"]
           args:
             - |
+              # Install Homebrew dependencies
+              apt-get update && apt-get install -y curl git build-essential procps file
+
+              # Install Homebrew
+              NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+              # Add Homebrew to PATH
+              echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc
+              eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+              # Install Jupyter Lab
               pip install jupyterlab
               mkdir -p /home/jovyan/notebook-123
+
+              # Start Jupyter Lab
               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/home/jovyan/notebook-123
           ports:
             - containerPort: 8888
