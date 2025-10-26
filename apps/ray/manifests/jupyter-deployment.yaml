@@ -13,30 +13,39 @@ spec:
       labels:
         app: jupyter-ray
     spec:
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
       containers:
         - name: jupyter
           image: rayproject/ray:2.40.0
           command: ["/bin/bash", "-c"]
           args:
             - |
-              # Install Homebrew dependencies as root
-              apt-get update && apt-get install -y curl git build-essential procps file sudo
+              echo "=== Starting Jupyter setup ==="
 
-              # Give ray user sudo permissions
-              echo "ray ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+              echo "=== Installing Homebrew dependencies ==="
+              apt-get update && apt-get install -y curl git build-essential procps file
+              echo "=== Homebrew dependencies installed ==="
 
-              # Switch to ray user and install Homebrew
+              echo "=== Installing Homebrew for ray user ==="
               su - ray -c 'NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+              echo "=== Homebrew installation complete ==="
 
-              # Add Homebrew to PATH for ray user
+              echo "=== Adding Homebrew to ray user PATH ==="
               su - ray -c 'echo eval \"\$\(/home/linuxbrew/.linuxbrew/bin/brew shellenv\)\" >> /home/ray/.bashrc'
-              su - ray -c 'echo eval \"\$\(/home/linuxbrew/.linuxbrew/bin/brew shellenv\)\" >> /home/ray/.profile'
+              echo "=== Homebrew added to PATH ==="
 
-              # Install Jupyter Lab
+              echo "=== Verifying brew installation ==="
+              su - ray -c '/home/linuxbrew/.linuxbrew/bin/brew --version' || echo "Brew not found!"
+
+              echo "=== Installing Jupyter Lab ==="
               pip install jupyterlab
               mkdir -p /home/jovyan/notebook-123
+              echo "=== Jupyter Lab installed ==="
 
-              # Start Jupyter Lab
+              echo "=== Starting Jupyter Lab ==="
+              export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/home/jovyan/notebook-123
           ports:
             - containerPort: 8888
@@ -51,8 +60,8 @@ spec:
           env:
             - name: RAY_ADDRESS
               value: "ray://raycluster-sample-head-svc.ray-system.svc.cluster.local:10001"
-            - name: PATH
-              value: "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            - name: HOMEBREW_PREFIX
+              value: "/home/linuxbrew/.linuxbrew"
           volumeMounts:
             - name: notebooks
               mountPath: /home/jovyan
