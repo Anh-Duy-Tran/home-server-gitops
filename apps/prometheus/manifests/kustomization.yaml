@@ -7,6 +7,8 @@ resources:
   - namespace.yaml
   - prometheus-deployment.yaml
   - grafana-deployment.yaml
+  - node-exporter.yaml
+  - kube-state-metrics.yaml
 
 configMapGenerator:
   - name: prometheus-config
@@ -21,6 +23,7 @@ configMapGenerator:
   - name: grafana-dashboards
     files:
       - ray-cluster.json=configs/dashboards/ray-cluster.json
+      - k8s-cluster.json=configs/dashboards/k8s-cluster.json
 
 secretGenerator:
   - name: grafana-admin

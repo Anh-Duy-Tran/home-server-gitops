@@ -16,6 +16,16 @@ This directory contains the Prometheus and Grafana monitoring stack for the Kube
 - **Port**: 3000
 - **Default credentials**: admin/admin (change after first login)
 
+### Node Exporter (DaemonSet)
+- **Version**: v1.8.2
+- Runs on every node to collect hardware and OS metrics
+- **Metrics**: CPU, memory, disk, network, filesystem
+
+### Kube State Metrics
+- **Version**: v2.13.0
+- Exposes Kubernetes object state metrics
+- **Metrics**: Pods, deployments, nodes, namespaces, etc.
+
 ## Metrics Collection
 
 The Prometheus configuration automatically scrapes metrics from:
@@ -44,7 +54,58 @@ kubectl port-forward -n monitoring svc/grafana 3000:3000
 
 Then open http://localhost:3000
 
-Default login: `admin` / `admin`
+**Default credentials:**
+- Username: `admin`
+- Password: `admin`
+
+**⚠️ Important:** Change the admin password after first login!
+
+To change the password:
+1. Update `secretGenerator` in `manifests/kustomization.yaml`
+2. Change the `admin-password` value
+3. Commit and push - ArgoCD will update the secret
+
+## Pre-configured Dashboards
+
+Grafana comes with pre-configured dashboards:
+
+### 1. Kubernetes Cluster Health
+
+Shows k0s cluster infrastructure metrics:
+
+- **Overview Stats**: Nodes online, running pods, namespaces, unhealthy pods
+- **Resource Gauges**: Cluster-wide CPU and memory usage
+- **Node Metrics**: Per-node CPU, memory, disk usage over time
+- **Network Traffic**: RX/TX per node
+- **Pod Distribution**: Pods per namespace, pod status pie chart
+
+Access: **Dashboards → Kubernetes Cluster Health**
+
+### 2. Ray Cluster Overview
+
+Shows Ray distributed computing metrics:
+
+- **CPU/Memory Usage**: Total and used resources per Ray node
+- **Cluster Stats**: Total nodes, CPUs, memory, active actors
+- **Task Execution**: Task completion rates and states
+- **Object Store**: Memory usage in Ray's object store
+- **CPU Distribution**: CPU allocation across nodes
+
+Access: **Dashboards → Ray Cluster Overview**
+
+### Adding Custom Dashboards
+
+To add your own dashboards:
+
+1. Create a JSON file in `manifests/configs/dashboards/`
+2. Add it to `configMapGenerator` in `manifests/kustomization.yaml`:
+   ```yaml
+   - name: grafana-dashboards
+     files:
+       - ray-cluster.json=configs/dashboards/ray-cluster.json
+       - your-dashboard.json=configs/dashboards/your-dashboard.json
+   ```
+3. Commit and push - Grafana will auto-load it
 
 ## Ray Metrics
 
