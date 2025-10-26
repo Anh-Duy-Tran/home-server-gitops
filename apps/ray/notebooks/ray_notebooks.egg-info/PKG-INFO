@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: ray-notebooks
+Version: 0.1.0
+Summary: Local Ray development with cloud cluster
+Requires-Python: ==3.11.11
+Requires-Dist: ray[default]==2.50.1
+Requires-Dist: jupyterlab
+Requires-Dist: ipywidgets
+Requires-Dist: xgboost
+Requires-Dist: pandas
+Requires-Dist: scikit-learn
+Requires-Dist: minio
+Requires-Dist: pyarrow
+Requires-Dist: s3fs
+Requires-Dist: fsspec

@@ -1,0 +1,18 @@
+[project]
+name = "ray-notebooks"
+version = "0.1.0"
+description = "Local Ray development with cloud cluster"
+requires-python = "==3.11.11"
+
+dependencies = [
+    "ray[default]==2.50.1",
+    "jupyterlab",
+    "ipywidgets",
+    "xgboost",
+    "pandas",
+    "scikit-learn",
+    "minio",
+    "pyarrow",
+    "s3fs",
+    "fsspec",
+]

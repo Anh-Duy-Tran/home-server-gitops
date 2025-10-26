@@ -1,0 +1,10 @@
+ray[default]==2.50.1
+jupyterlab
+ipywidgets
+xgboost
+pandas
+scikit-learn
+minio
+pyarrow
+s3fs
+fsspec
