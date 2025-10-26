@@ -18,7 +18,7 @@ spec:
         runAsGroup: 0
       containers:
         - name: jupyter
-          image: rayproject/ray:2.40.0
+          image: rayproject/ray:2.50.1-py311
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -31,6 +31,7 @@ spec:
 
               echo "=== Setting up directories with correct ownership ==="
               mkdir -p /home/jovyan/notebook-123
+              mkdir -p /home/jovyan/.local
               mkdir -p /home/ray/.local
               chown -R ray /home/ray/.local /home/jovyan
               echo "=== Directories ready ==="
@@ -50,6 +51,12 @@ spec:
           env:
             - name: RAY_ADDRESS
               value: "ray://raycluster-sample-head-svc.ray-system.svc.cluster.local:10001"
+            - name: PYTHONUSERBASE
+              value: "/home/jovyan/.local"
+            - name: PIP_USER
+              value: "true"
+            - name: PATH
+              value: "/home/jovyan/.local/bin:/home/ray/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
           volumeMounts:
             - name: notebooks
               mountPath: /home/jovyan
