@@ -6,8 +6,14 @@ metadata:
 spec:
   rayVersion: "2.50.1"
   headGroupSpec:
-    rayStartParams: {}
+    rayStartParams:
+      metrics-export-port: "8080"
     template:
+      metadata:
+        annotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8080"
+          prometheus.io/path: "/metrics"
       spec:
         containers:
           - name: ray-head
@@ -35,13 +41,21 @@ spec:
                 name: dashboard
               - containerPort: 10001
                 name: client
+              - containerPort: 8080
+                name: metrics
   workerGroupSpecs:
     - replicas: 4
       minReplicas: 4
       maxReplicas: 4
       groupName: small-group
-      rayStartParams: {}
+      rayStartParams:
+        metrics-export-port: "8080"
       template:
+        metadata:
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "8080"
+            prometheus.io/path: "/metrics"
         spec:
           containers:
             - name: ray-worker
@@ -62,3 +76,6 @@ spec:
                 requests:
                   cpu: "1"
                   memory: "3Gi"
+              ports:
+                - containerPort: 8080
+                  name: metrics
