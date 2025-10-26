@@ -11,7 +11,9 @@ spec:
     targetRevision: main
     path: apps/ray
     directory:
-      include: "{operator,cluster,jupyter}.yaml"
+      include: "{operator,cluster}.yaml"
+      # Un-comment if we want jupyter running on cluster
+      # include: "{operator,cluster,jupyter}.yaml"
 
   destination:
     server: https://kubernetes.default.svc
