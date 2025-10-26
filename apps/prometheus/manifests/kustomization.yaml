@@ -15,6 +15,18 @@ configMapGenerator:
   - name: grafana-datasources
     files:
       - datasources.yaml=configs/datasources.yaml
+  - name: grafana-dashboard-provider
+    files:
+      - dashboards.yaml=configs/dashboard-provider.yaml
+  - name: grafana-dashboards
+    files:
+      - ray-cluster.json=configs/dashboards/ray-cluster.json
+
+secretGenerator:
+  - name: grafana-admin
+    literals:
+      - admin-user=admin
+      - admin-password=admin # Change this!
 
 images:
   - name: prom/prometheus
