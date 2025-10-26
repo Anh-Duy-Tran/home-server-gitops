@@ -19,15 +19,18 @@ spec:
           command: ["/bin/bash", "-c"]
           args:
             - |
-              # Install Homebrew dependencies
-              apt-get update && apt-get install -y curl git build-essential procps file
+              # Install Homebrew dependencies as root
+              apt-get update && apt-get install -y curl git build-essential procps file sudo
 
-              # Install Homebrew
-              NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+              # Give ray user sudo permissions
+              echo "ray ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-              # Add Homebrew to PATH
-              echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc
-              eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+              # Switch to ray user and install Homebrew
+              su - ray -c 'NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+
+              # Add Homebrew to PATH for ray user
+              su - ray -c 'echo eval \"\$\(/home/linuxbrew/.linuxbrew/bin/brew shellenv\)\" >> /home/ray/.bashrc'
+              su - ray -c 'echo eval \"\$\(/home/linuxbrew/.linuxbrew/bin/brew shellenv\)\" >> /home/ray/.profile'
 
               # Install Jupyter Lab
               pip install jupyterlab
