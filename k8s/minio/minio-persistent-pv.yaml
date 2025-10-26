@@ -9,7 +9,7 @@ metadata:
   name: minio-data-pv
 spec:
   capacity:
-    storage: 12Gi
+    storage: 50Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain # Keep data on cluster reset!
@@ -37,5 +37,5 @@ spec:
   storageClassName: minio-local-storage
   resources:
     requests:
-      storage: 12Gi
+      storage: 50Gi
   volumeName: minio-data-pv # Bind to specific PV
