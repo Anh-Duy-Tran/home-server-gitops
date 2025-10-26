@@ -5,36 +5,15 @@ metadata:
   user: admin
 spec:
   hosts:
-    # - role: controller
-    #   ssh:
-    #     address: 167.99.131.174
-    #     user: root
-    #     port: 22
-    #     keyPath: ~/.ssh/id_rsa
-    #   installFlags:
-    #     - --debug
-    #   files:
-    #     - name: cloudflare-tunnel-secrets
-    #       src: ./cloudflare-tunnel/cloudflare-tunnel-secret.yaml
-    #       dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
-    #       perm: 0644
-    #     - name: minio-persistent-pv
-    #       src: ./minio/minio-persistent-pv.yaml
-    #       dstDir: /var/lib/k0s/manifests/storage/
-    #       perm: 0644
-    #     - name: velero-auto-restore
-    #       src: ./velero/auto-restore-config.yaml
-    #       dstDir: /var/lib/k0s/manifests/velero/
-    #       perm: 0644
-    - role: single
+    - role: controller
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.4"
       ssh:
-        address: 192.168.50.240
-        user: duytran
+        address: 138.68.72.200
+        user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
-      installFlags:
-        - --debug
-      # Comment this out if the target host doesn't have firewall problem
+      privateAddress: 10.114.0.4
       hooks:
         apply:
           before:
@@ -51,6 +30,105 @@ spec:
         - name: velero-auto-restore
           src: ./velero/auto-restore-config.yaml
           dstDir: /var/lib/k0s/manifests/velero/
+          perm: 0644
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.2"
+      ssh:
+        address: 139.59.141.22
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.2
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.7"
+      ssh:
+        address: 167.99.143.92
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.7
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.5"
+      ssh:
+        address: 164.92.254.46
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.5
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.3"
+      ssh:
+        address: 139.59.214.144
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.3
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.6"
+      ssh:
+        address: 159.89.106.68
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.6
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
           perm: 0644
   k0s:
     config:
@@ -218,6 +296,7 @@ spec:
                       - hostname: "*.duytran.app"
                         service: http://traefik.traefik:80
         api:
+          address: 10.114.0.4
           k0sApiPort: 9443
           port: 6443
         installConfig:
@@ -234,20 +313,24 @@ spec:
           kubeProxy:
             disabled: false
             mode: iptables
-          kuberouter:
-            autoMTU: true
-            mtu: 0
-            peerRouterASNs: ""
-            peerRouterIPs: ""
+          calico:
+            mode: vxlan
+            vxlanPort: 4789
+            vxlanVNI: 4096
+            mtu: 1450
+            wireguard: false
+            flexVolumeDriverPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/nodeagent~uds
+            ipAutodetectionMethod: "first-found"
+            overlay: Always
           podCIDR: 10.244.0.0/16
-          provider: kuberouter
+          provider: calico
           serviceCIDR: 10.96.0.0/12
         podSecurityPolicy:
           defaultPolicy: 00-k0s-privileged
         storage:
           type: etcd
         telemetry:
-          enabled: true
+          enabled: false
   options:
     wait:
       enabled: true
