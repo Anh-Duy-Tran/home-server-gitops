@@ -15,7 +15,7 @@ spec:
             lifecycle:
               postStart:
                 exec:
-                  command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs"]
+                  command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel"]
             resources:
               limits:
                 cpu: "1"
@@ -44,7 +44,7 @@ spec:
               lifecycle:
                 postStart:
                   exec:
-                    command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs"]
+                    command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel"]
               resources:
                 limits:
                   cpu: "1"
