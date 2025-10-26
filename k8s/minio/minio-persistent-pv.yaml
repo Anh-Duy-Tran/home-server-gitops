@@ -9,7 +9,7 @@ metadata:
   name: minio-data-pv
 spec:
   capacity:
-    storage: 50Gi
+    storage: 12Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain # Keep data on cluster reset!
@@ -24,7 +24,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - alarm # UPDATE THIS: Match your node hostname
+                - k0s-worker-1 # Worker node
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -37,5 +37,5 @@ spec:
   storageClassName: minio-local-storage
   resources:
     requests:
-      storage: 50Gi
+      storage: 12Gi
   volumeName: minio-data-pv # Bind to specific PV

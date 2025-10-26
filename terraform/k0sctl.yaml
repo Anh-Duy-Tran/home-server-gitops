@@ -1,0 +1,147 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: k0s-cluster
+spec:
+  hosts:
+    - role: controller
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.4"
+      ssh:
+        address: 138.68.72.200
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.4
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: cloudflare-tunnel-secrets
+          src: ./cloudflare-tunnel/cloudflare-tunnel-secret.yaml
+          dstDir: /var/lib/k0s/manifests/cloudflare-tunnel/
+          perm: 0644
+        - name: minio-persistent-pv
+          src: ./minio/minio-persistent-pv.yaml
+          dstDir: /var/lib/k0s/manifests/storage/
+          perm: 0644
+        - name: velero-auto-restore
+          src: ./velero/auto-restore-config.yaml
+          dstDir: /var/lib/k0s/manifests/velero/
+          perm: 0644
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.2"
+      ssh:
+        address: 139.59.141.22
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.2
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.7"
+      ssh:
+        address: 167.99.143.92
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.7
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.5"
+      ssh:
+        address: 164.92.254.46
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.5
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.3"
+      ssh:
+        address: 139.59.214.144
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.3
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+    - role: worker
+      installFlags:
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.6"
+      ssh:
+        address: 159.89.106.68
+        user: root
+        port: 22
+        keyPath: ~/.ssh/id_rsa
+      privateAddress: 10.114.0.6
+      hooks:
+        apply:
+          before:
+            - sudo iptables-restore < /etc/iptables/iptables.rules
+      files:
+        - name: iptables-rules-restore
+          src: ./iptables.rules
+          dstDir: /etc/iptables/
+          perm: 0644
+
+  k0s:
+    version: null # Uses latest stable version
+    config:
+      apiVersion: k0s.k0sproject.io/v1beta1
+      kind: ClusterConfig
+      metadata:
+        name: k0s
+      spec:
+        api:
+          address: 10.114.0.4
+          externalAddress: 138.68.72.200
+        network:
+          provider: kuberouter
+          podCIDR: 10.244.0.0/16
+          serviceCIDR: 10.96.0.0/12

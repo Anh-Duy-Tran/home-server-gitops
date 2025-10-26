@@ -79,6 +79,16 @@ resource "digitalocean_firewall" "k0s" {
     )
   }
 
+  # This includes IPIP (protocol 4) needed for overlay networking
+  # ICMP for ping and IPIP encapsulation
+  inbound_rule {
+    protocol = "icmp"
+    source_droplet_ids = concat(
+      [digitalocean_droplet.controller.id],
+      digitalocean_droplet.workers[*].id
+    )
+  }
+
   # Allow all outbound
   outbound_rule {
     protocol              = "tcp"
@@ -184,12 +194,35 @@ resource "null_resource" "configure_volumes" {
   }
 }
 
+# Generate k0sctl.yaml
+resource "local_file" "k0sctl_yaml" {
+  filename = "${path.module}/k0sctl.yaml"
+  content = templatefile("${path.module}/k0sctl.yaml.tpl", {
+    controller_public_ip  = digitalocean_droplet.controller.ipv4_address
+    controller_private_ip = digitalocean_droplet.controller.ipv4_address_private
+    worker_hosts = [for idx, worker in digitalocean_droplet.workers : {
+      name       = worker.name
+      public_ip  = worker.ipv4_address
+      private_ip = worker.ipv4_address_private
+    }]
+    ssh_key_path = var.ssh_private_key_path
+  })
+}
+
 output "controller_ip" {
   value = digitalocean_droplet.controller.ipv4_address
 }
 
+output "controller_private_ip" {
+  value = digitalocean_droplet.controller.ipv4_address_private
+}
+
 output "worker_ips" {
   value = digitalocean_droplet.workers[*].ipv4_address
+}
+
+output "worker_private_ips" {
+  value = digitalocean_droplet.workers[*].ipv4_address_private
 }
 
 output "ssh_controller" {
@@ -217,4 +250,8 @@ output "k0sctl_hosts" {
       }
     }]
   }
+}
+
+output "k0sctl_yaml_path" {
+  value = abspath(local_file.k0sctl_yaml.filename)
 }
