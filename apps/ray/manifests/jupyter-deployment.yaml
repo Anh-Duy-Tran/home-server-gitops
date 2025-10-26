@@ -76,6 +76,8 @@ spec:
               value: "ray://raycluster-sample-head-svc.ray-system.svc.cluster.local:10001"
             - name: HOMEBREW_PREFIX
               value: "/home/jovyan/.homebrew"
+            - name: PATH
+              value: "/home/jovyan/.homebrew/bin:/home/jovyan/.homebrew/sbin:/home/ray/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
           volumeMounts:
             - name: notebooks
               mountPath: /home/jovyan
