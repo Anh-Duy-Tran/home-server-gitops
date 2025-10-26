@@ -93,6 +93,20 @@ Shows Ray distributed computing metrics:
 
 Access: **Dashboards → Ray Cluster Overview**
 
+### 3. Traefik Ingress Controller
+
+Shows HTTP ingress/reverse proxy metrics:
+
+- **Overview Stats**: Request rate, active connections, response times, config reload status
+- **Request Rate**: Per entrypoint (web, websecure)
+- **Status Codes**: 2xx, 4xx, 5xx distribution over time
+- **Response Times**: p50, p95, p99 latency percentiles
+- **Connections**: Open connections per entrypoint
+- **HTTP Methods**: Request distribution (GET, POST, etc.)
+- **Backends**: Request rate per service/backend
+
+Access: **Dashboards → Traefik Ingress Controller**
+
 ### Adding Custom Dashboards
 
 To add your own dashboards:
