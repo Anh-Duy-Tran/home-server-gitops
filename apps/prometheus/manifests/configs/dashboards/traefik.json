@@ -113,7 +113,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(traefik_entrypoint_open_connections)",
+          "expr": "sum(traefik_open_connections)",
           "refId": "A"
         }
       ],
