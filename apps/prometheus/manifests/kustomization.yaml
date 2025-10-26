@@ -28,7 +28,6 @@ replicas:
   - name: grafana
     count: 1
 
-labels:
-  - pairs:
-      app.kubernetes.io/part-of: monitoring-stack
-      managed-by: argocd
+commonLabels:
+  app.kubernetes.io/part-of: monitoring-stack
+  managed-by: argocd
