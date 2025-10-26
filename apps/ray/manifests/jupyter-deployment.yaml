@@ -41,8 +41,12 @@ spec:
 
               echo "=== Installing Jupyter Lab ==="
               pip install jupyterlab
+
+              echo "=== Setting up directories with correct ownership ==="
               mkdir -p /home/jovyan/notebook-123
-              echo "=== Jupyter Lab installed ==="
+              mkdir -p /home/ray/.local
+              chown -R ray /home/ray/.local /home/jovyan
+              echo "=== Directories ready ==="
 
               echo "=== Starting Jupyter Lab ==="
               export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
