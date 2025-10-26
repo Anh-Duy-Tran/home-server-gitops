@@ -15,7 +15,12 @@ spec:
             lifecycle:
               postStart:
                 exec:
-                  command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel"]
+                  command:
+                    [
+                      "/bin/bash",
+                      "-c",
+                      "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel",
+                    ]
             resources:
               limits:
                 cpu: "1"
@@ -31,9 +36,9 @@ spec:
               - containerPort: 10001
                 name: client
   workerGroupSpecs:
-    - replicas: 2
-      minReplicas: 1
-      maxReplicas: 3
+    - replicas: 4
+      minReplicas: 4
+      maxReplicas: 4
       groupName: small-group
       rayStartParams: {}
       template:
@@ -44,7 +49,12 @@ spec:
               lifecycle:
                 postStart:
                   exec:
-                    command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel"]
+                    command:
+                      [
+                        "/bin/bash",
+                        "-c",
+                        "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel",
+                      ]
               resources:
                 limits:
                   cpu: "1"
