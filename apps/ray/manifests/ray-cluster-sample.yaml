@@ -19,7 +19,7 @@ spec:
                     [
                       "/bin/bash",
                       "-c",
-                      "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel",
+                      "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel minio",
                     ]
             resources:
               limits:
@@ -53,7 +53,7 @@ spec:
                       [
                         "/bin/bash",
                         "-c",
-                        "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel",
+                        "pip install --user scikit-learn xgboost pandas pyarrow s3fs fsspec IPython ipykernel minio",
                       ]
               resources:
                 limits:
