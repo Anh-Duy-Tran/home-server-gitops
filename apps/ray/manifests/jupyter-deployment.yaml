@@ -27,13 +27,17 @@ spec:
               echo "=== System packages installed ==="
 
               echo "=== Installing Jupyter Lab ==="
+              export PYTHONUSERBASE="/home/jovyan/.local"
+              export PIP_USER="true"
               pip install jupyterlab
 
               echo "=== Setting up directories with correct ownership ==="
               mkdir -p /home/jovyan/notebook-123
               mkdir -p /home/jovyan/.local
               mkdir -p /home/ray/.local
-              chown -R ray /home/ray/.local /home/jovyan
+              mkdir -p /home/ray/.local/share/jupyter/labextensions
+              chown -R ray:users /home/ray/.local/share/jupyter/labextensions
+              chown -R ray:users /home/ray/.local /home/jovyan
               echo "=== Directories ready ==="
 
               echo "=== Starting Jupyter Lab ==="
@@ -56,7 +60,7 @@ spec:
             - name: PIP_USER
               value: "true"
             - name: PATH
-              value: "/home/jovyan/.local/bin:/home/ray/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+              value: "/home/jovyan/.local/bin:/home/ray/.local/bin:/home/ray/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
           volumeMounts:
             - name: notebooks
               mountPath: /home/jovyan

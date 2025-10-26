@@ -12,6 +12,10 @@ spec:
         containers:
           - name: ray-head
             image: rayproject/ray:2.50.1-py311-gpu
+            lifecycle:
+              postStart:
+                exec:
+                  command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs"]
             resources:
               limits:
                 cpu: "1"
@@ -37,6 +41,10 @@ spec:
           containers:
             - name: ray-worker
               image: rayproject/ray:2.50.1-py311-gpu
+              lifecycle:
+                postStart:
+                  exec:
+                    command: ["/bin/bash", "-c", "pip install --user scikit-learn xgboost pandas pyarrow s3fs"]
               resources:
                 limits:
                   cpu: "1"
