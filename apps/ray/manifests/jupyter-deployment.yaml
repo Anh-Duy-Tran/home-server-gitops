@@ -28,16 +28,26 @@ spec:
               apt-get update && apt-get install -y curl git build-essential procps file
               echo "=== Homebrew dependencies installed ==="
 
-              echo "=== Installing Homebrew for ray user ==="
-              su - ray -c 'NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-              echo "=== Homebrew installation complete ==="
+              echo "=== Setting up Homebrew in persistent storage ==="
+              export HOMEBREW_PREFIX="/home/jovyan/.homebrew"
+
+              if [ ! -d "$HOMEBREW_PREFIX" ]; then
+                echo "=== Installing Homebrew for ray user to persistent storage ==="
+                mkdir -p "$HOMEBREW_PREFIX"
+                chown -R ray "$HOMEBREW_PREFIX"
+                su - ray -c "export HOMEBREW_PREFIX=$HOMEBREW_PREFIX && NONINTERACTIVE=1 /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+                echo "=== Homebrew installation complete ==="
+              else
+                echo "=== Homebrew already installed, skipping ==="
+              fi
 
               echo "=== Adding Homebrew to ray user PATH ==="
-              su - ray -c 'echo eval \"\$\(/home/linuxbrew/.linuxbrew/bin/brew shellenv\)\" >> /home/ray/.bashrc'
-              echo "=== Homebrew added to PATH ==="
+              su - ray -c "echo 'export HOMEBREW_PREFIX=$HOMEBREW_PREFIX' >> /home/ray/.bashrc"
+              su - ray -c "echo 'eval \"\$($HOMEBREW_PREFIX/bin/brew shellenv)\"' >> /home/ray/.bashrc"
+              echo "=== Homebrew configured ==="
 
               echo "=== Verifying brew installation ==="
-              su - ray -c '/home/linuxbrew/.linuxbrew/bin/brew --version' || echo "Brew not found!"
+              su - ray -c "$HOMEBREW_PREFIX/bin/brew --version" || echo "Brew not found!"
 
               echo "=== Installing Jupyter Lab ==="
               pip install jupyterlab
@@ -49,7 +59,7 @@ spec:
               echo "=== Directories ready ==="
 
               echo "=== Starting Jupyter Lab ==="
-              export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
+              export PATH="/home/jovyan/.homebrew/bin:/home/jovyan/.homebrew/sbin:$PATH"
               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/home/jovyan/notebook-123
           ports:
             - containerPort: 8888
@@ -65,7 +75,7 @@ spec:
             - name: RAY_ADDRESS
               value: "ray://raycluster-sample-head-svc.ray-system.svc.cluster.local:10001"
             - name: HOMEBREW_PREFIX
-              value: "/home/linuxbrew/.linuxbrew"
+              value: "/home/jovyan/.homebrew"
           volumeMounts:
             - name: notebooks
               mountPath: /home/jovyan
