@@ -5,6 +5,8 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "1" # Apply after wave 0 (the operator)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
 
