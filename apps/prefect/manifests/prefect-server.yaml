@@ -46,7 +46,9 @@ spec:
             - name: PREFECT_API_DATABASE_CONNECTION_URL
               value: "sqlite+aiosqlite:////var/lib/prefect/prefect.db"
             - name: PREFECT_API_URL
-              value: "http://prefect-server.prefect:4200/api"
+              # port forward this at the momnet, so use localhost here
+              value: "http://localhost:4200/api"
+              # value: "http://prefect-server.prefect:4200/api"
           volumeMounts:
             - name: prefect-data
               mountPath: /var/lib/prefect
