@@ -7,13 +7,12 @@ spec:
   hosts:
     - role: controller
       installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.4"
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
       ssh:
-        address: 138.68.72.200
+        address: k0s-controller.app
         user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
-      privateAddress: 10.114.0.4
       hooks:
         apply:
           before:
@@ -38,13 +37,12 @@ spec:
 
     - role: worker
       installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.2"
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
       ssh:
-        address: 139.59.141.22
+        address: k0s-worker-1.app
         user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
-      privateAddress: 10.114.0.2
       hooks:
         apply:
           before:
@@ -57,13 +55,12 @@ spec:
 
     - role: worker
       installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.7"
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
       ssh:
-        address: 167.99.143.92
+        address: k0s-worker-2.app
         user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
-      privateAddress: 10.114.0.7
       hooks:
         apply:
           before:
@@ -76,13 +73,12 @@ spec:
 
     - role: worker
       installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.5"
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
       ssh:
-        address: 164.92.254.46
+        address: k0s-worker-3.app
         user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
-      privateAddress: 10.114.0.5
       hooks:
         apply:
           before:
@@ -95,13 +91,12 @@ spec:
 
     - role: worker
       installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.3"
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
       ssh:
-        address: 139.59.214.144
+        address: k0s-worker-4.app
         user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
-      privateAddress: 10.114.0.3
       hooks:
         apply:
           before:
@@ -114,13 +109,12 @@ spec:
 
     - role: worker
       installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf --node-ip=10.114.0.6"
+        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
       ssh:
-        address: 159.89.106.68
+        address: k0s-worker-5.app
         user: root
         port: 22
         keyPath: ~/.ssh/id_rsa
-      privateAddress: 10.114.0.6
       hooks:
         apply:
           before:
@@ -296,7 +290,6 @@ spec:
                       - hostname: "*.duytran.app"
                         service: http://traefik.traefik:80
         api:
-          address: 10.114.0.4
           k0sApiPort: 9443
           port: 6443
         installConfig:
