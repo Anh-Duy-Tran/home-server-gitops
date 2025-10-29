@@ -70,7 +70,25 @@ Provisions a complete k0s cluster on DigitalOcean with:
    - Mount volumes at `/var/lib/k0s` automatically
    - Configure firewall rules
 
-5. **Get outputs:**
+5. **Add DNS entries to /etc/hosts:**
+
+   After apply, a `hosts.txt` file is generated with entries for all nodes. Add them to your `/etc/hosts`:
+
+   ```bash
+   sudo cat hosts.txt >> /etc/hosts
+   ```
+
+   This allows you to SSH using hostnames:
+
+   ```bash
+   ssh root@k0s-controller
+   ssh root@k0s-worker-1
+   ssh root@k0s-worker-2
+   ```
+
+   **Note:** When you destroy the cluster, manually remove these entries from `/etc/hosts`.
+
+6. **Get outputs:**
 
    ```bash
    terraform output controller_ip
@@ -79,7 +97,7 @@ Provisions a complete k0s cluster on DigitalOcean with:
    terraform output ssh_workers
    ```
 
-6. **Use with k0sctl:**
+7. **Use with k0sctl:**
    ```bash
    terraform output -json k0sctl_hosts
    ```

@@ -7,6 +7,9 @@ terraform.tfvars
 *.tfvars
 !*.tfvars.example
 
+# Generated files
+hosts.txt
+
 # Credentials
 *.pem
 *.key

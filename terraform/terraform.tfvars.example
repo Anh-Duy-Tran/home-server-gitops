@@ -6,7 +6,7 @@ do_token = "dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 region = "fra1"
 
 # Droplet sizes (General Purpose tier)
-controller_size = "g-2vcpu-8gb"  # 2 vCPU, 8GB RAM
+controller_size = "c-4"  # 4 vCPU, 8GB RAM
 worker_size     = "g-2vcpu-8gb"  # 2 vCPU, 8GB RAM
 
 # Number of worker nodes

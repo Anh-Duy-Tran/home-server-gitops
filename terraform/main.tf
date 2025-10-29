@@ -194,19 +194,16 @@ resource "null_resource" "configure_volumes" {
   }
 }
 
-# Generate k0sctl.yaml
-resource "local_file" "k0sctl_yaml" {
-  filename = "${path.module}/k0sctl.yaml"
-  content = templatefile("${path.module}/k0sctl.yaml.tpl", {
-    controller_public_ip  = digitalocean_droplet.controller.ipv4_address
-    controller_private_ip = digitalocean_droplet.controller.ipv4_address_private
-    worker_hosts = [for idx, worker in digitalocean_droplet.workers : {
-      name       = worker.name
-      public_ip  = worker.ipv4_address
-      private_ip = worker.ipv4_address_private
-    }]
-    ssh_key_path = var.ssh_private_key_path
-  })
+# Generate hosts file entries
+resource "local_file" "hosts_entries" {
+  filename = "${path.module}/hosts.txt"
+  content  = <<-EOT
+# k0s Cluster Hosts
+${digitalocean_droplet.controller.ipv4_address}    k0s-controller
+%{for worker in digitalocean_droplet.workers~}
+${worker.ipv4_address}    ${worker.name}
+%{endfor~}
+  EOT
 }
 
 output "controller_ip" {
@@ -250,8 +247,4 @@ output "k0sctl_hosts" {
       }
     }]
   }
-}
-
-output "k0sctl_yaml_path" {
-  value = abspath(local_file.k0sctl_yaml.filename)
 }
