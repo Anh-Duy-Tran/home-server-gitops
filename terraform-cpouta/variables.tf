@@ -13,19 +13,25 @@ variable "network_name" {
 variable "controller_flavor" {
   description = "Flavor (size) for controller node (use 'openstack flavor list')"
   type        = string
-  default     = "standard.medium" # 2 vCPU, 8GB RAM
+  default     = "standard.small" # 2 vCPU, 2GB RAM
 }
 
 variable "worker_flavor" {
   description = "Flavor (size) for worker nodes (use 'openstack flavor list')"
   type        = string
-  default     = "standard.medium" # 2 vCPU, 8GB RAM
+  default     = "standard.small" # 2 vCPU, 2GB RAM
 }
 
 variable "worker_count" {
   description = "Number of worker nodes"
   type        = number
-  default     = 4
+  default     = 2
+}
+
+variable "assign_worker_floating_ips" {
+  description = "Assign floating IPs to workers (set to false to save floating IP quota)"
+  type        = bool
+  default     = false
 }
 
 variable "ssh_public_key_path" {
@@ -44,4 +50,10 @@ variable "ssh_user" {
   description = "SSH user for the Ubuntu image (usually 'ubuntu' or 'cloud-user')"
   type        = string
   default     = "ubuntu"
+}
+
+variable "enable_additional_storage" {
+  description = "Enable additional 100GB volumes for workers (set to false for initial deployment)"
+  type        = bool
+  default     = false
 }

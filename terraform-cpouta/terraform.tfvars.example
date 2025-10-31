@@ -12,17 +12,24 @@ network_name = "project_2011111"
 # Flavor names (run: openstack flavor list)
 # Common cPouta flavors:
 #   standard.tiny     - 1 vCPU, 1GB RAM
-#   standard.small    - 1 vCPU, 2GB RAM
-#   standard.medium   - 2 vCPU, 8GB RAM
-#   standard.large    - 4 vCPU, 15GB RAM
-#   standard.xlarge   - 6 vCPU, 30GB RAM
-#   standard.xxlarge  - 8 vCPU, 60GB RAM
-#   standard.3xlarge  - 8 vCPU, 120GB RAM
-controller_flavor = "standard.medium"
-worker_flavor     = "standard.medium"
+#   standard.small    - 2 vCPU, 2GB RAM  ← Quota-friendly
+#   standard.medium   - 3 vCPU, 4GB RAM
+#   standard.large    - 4 vCPU, 8GB RAM
+#   standard.xlarge   - 6 vCPU, 15GB RAM
+#   standard.xxlarge  - 8 vCPU, 31GB RAM
+#   standard.3xlarge  - 8 vCPU, 62GB RAM
 
-# Number of worker nodes
-worker_count = 4
+# Quota-friendly defaults (2+2+2 = 6 cores total, fits 8 core limit)
+controller_flavor = "standard.small"
+worker_flavor     = "standard.small"
+
+# Number of worker nodes (default: 2 to fit quota)
+worker_count = 3
+
+# Floating IPs for workers (disabled by default to save floating IP quota)
+# Controller always gets a floating IP. Workers accessed via controller bastion.
+# Set to true if you have floating IP quota and want direct worker access.
+assign_worker_floating_ips = false
 
 # SSH configuration
 ssh_public_key_path  = "~/.ssh/id_rsa.pub"
@@ -31,3 +38,8 @@ ssh_private_key_path = "~/.ssh/id_rsa"
 # SSH user for Ubuntu images (usually 'ubuntu')
 # For other images, might be 'cloud-user', 'centos', 'debian', etc.
 ssh_user = "ubuntu"
+
+# Additional storage volumes (100GB each)
+# Set to false for initial deployment to use only default instance storage
+# Set to true later if you need additional storage mounted at /var/lib/k0s
+enable_additional_storage = true 

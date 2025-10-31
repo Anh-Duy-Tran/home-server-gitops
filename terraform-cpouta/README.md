@@ -1,4 +1,4 @@
-# OpenTofu/Terraform cPouta k0s Infrastructure
+# Terraform cPouta k0s Infrastructure
 
 Provisions a complete k0s cluster on CSC's cPouta (OpenStack) with:
 
@@ -47,14 +47,13 @@ pip install python-openstackclient
 openstack --version
 ```
 
-### 4. OpenTofu or Terraform
+### 4. Terraform
 
 ```bash
-# OpenTofu (recommended - fully open source)
-brew install opentofu
-
-# Or Terraform
 brew install terraform
+
+# Verify installation
+terraform --version
 ```
 
 ### 5. SSH Key Pair
@@ -163,23 +162,15 @@ source project_XXXXXX-openrc.sh
 # Enter your CSC password when prompted
 ```
 
-### 2. Initialize OpenTofu/Terraform
+### 2. Initialize Terraform
 
 ```bash
-# If using OpenTofu
-tofu init
-
-# If using Terraform
 terraform init
 ```
 
 ### 3. Plan
 
 ```bash
-# OpenTofu
-tofu plan
-
-# Terraform
 terraform plan
 ```
 
@@ -193,10 +184,6 @@ Review the plan to ensure it will create:
 ### 4. Apply
 
 ```bash
-# OpenTofu
-tofu apply
-
-# Terraform
 terraform apply
 ```
 
@@ -237,13 +224,6 @@ ssh ubuntu@k0s-worker-1
 ### 6. Get Outputs
 
 ```bash
-# OpenTofu
-tofu output controller_public_ip
-tofu output worker_public_ips
-tofu output ssh_controller
-tofu output -json k0sctl_hosts
-
-# Terraform
 terraform output controller_public_ip
 terraform output worker_public_ips
 terraform output ssh_controller
@@ -337,10 +317,6 @@ cPouta uses Billing Units (BUs). Approximate costs:
 After deployment, generate k0sctl configuration:
 
 ```bash
-# OpenTofu
-tofu output -json k0sctl_hosts > k0sctl-hosts.json
-
-# Terraform
 terraform output -json k0sctl_hosts > k0sctl-hosts.json
 ```
 
@@ -354,10 +330,10 @@ Use this output to update your `k0sctl.yaml` configuration.
 
 ```bash
 # Controller
-ssh ubuntu@$(tofu output -raw controller_public_ip)
+ssh ubuntu@$(terraform output -raw controller_public_ip)
 
 # Workers (loop through all)
-tofu output -json worker_public_ips | jq -r '.[]' | xargs -I {} ssh ubuntu@{}
+terraform output -json worker_public_ips | jq -r '.[]' | xargs -I {} ssh ubuntu@{}
 ```
 
 ### Using Hostnames (after adding to /etc/hosts)
@@ -417,11 +393,6 @@ cat /etc/fstab | grep k0s
 ### Re-run Volume Provisioning
 
 ```bash
-# OpenTofu
-tofu taint 'null_resource.configure_volumes[0]'
-tofu apply
-
-# Terraform
 terraform taint 'null_resource.configure_volumes[0]'
 terraform apply
 ```
@@ -472,10 +443,6 @@ openstack network list
 **Warning:** This will delete all resources and cannot be undone!
 
 ```bash
-# OpenTofu
-tofu destroy
-
-# Terraform
 terraform destroy
 ```
 
@@ -522,6 +489,11 @@ Type `yes` when prompted.
 
 ### Using with k0sctl
 
+```bash
+# Export k0sctl configuration
+terraform output -json k0sctl_hosts > k0sctl-hosts.json
+```
+
 Your existing `k8s/k0sctl.yaml` should work with minor modifications:
 
 1. Update host addresses to use floating IPs
@@ -561,18 +533,18 @@ openstack server delete <server-id>
 openstack volume delete <volume-id>
 ```
 
-### OpenTofu/Terraform State
+### Terraform State
 
 ```bash
 # Show state
-tofu state list
-tofu state show openstack_compute_instance_v2.controller
+terraform state list
+terraform state show openstack_compute_instance_v2.controller
 
 # Import existing resource
-tofu import openstack_compute_instance_v2.controller <instance-id>
+terraform import openstack_compute_instance_v2.controller <instance-id>
 
 # Remove resource from state (doesn't delete)
-tofu state rm openstack_compute_instance_v2.controller
+terraform state rm openstack_compute_instance_v2.controller
 ```
 
 ---
@@ -591,35 +563,7 @@ tofu state rm openstack_compute_instance_v2.controller
 - [Provider Documentation](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs)
 - [CSC Terraform Example](https://github.com/CSCfi/terraform-openstack-example)
 
-### OpenTofu
+### Terraform
 
-- [OpenTofu Documentation](https://opentofu.org/docs/)
-- [Migration from Terraform](https://opentofu.org/docs/intro/migration/)
+- [Terraform Documentation](https://www.terraform.io/docs)
 
----
-
-## TODO / Future Improvements
-
-- [ ] Add support for GPU flavors (io.XXX series)
-- [ ] Implement backup strategy for volumes
-- [ ] Add monitoring with cPouta's built-in metrics
-- [ ] Create separate security groups for production/staging
-- [ ] Add support for multiple availability zones
-- [ ] Integrate with CSC's identity federation
-- [ ] Add automated testing with kitchen-terraform
-
----
-
-## Support
-
-For issues:
-
-1. **cPouta/CSC**: servicedesk@csc.fi
-2. **This repo**: [GitHub Issues](https://github.com/Anh-Duy-Tran/home-server-gitops/issues)
-3. **OpenStack Provider**: [GitHub Issues](https://github.com/terraform-provider-openstack/terraform-provider-openstack/issues)
-
----
-
-## License
-
-Same as parent repository.

@@ -158,9 +158,10 @@ resource "openstack_networking_secgroup_rule_v2" "cluster_icmp" {
   security_group_id = openstack_networking_secgroup_v2.cluster_internal.id
 }
 
-# Volumes for workers (100GB each)
+# Optional: Additional volumes for workers (100GB each)
+# Set enable_additional_storage = true to create these
 resource "openstack_blockstorage_volume_v3" "worker_storage" {
-  count       = var.worker_count
+  count       = var.enable_additional_storage ? var.worker_count : 0
   name        = "k0s-worker-${count.index + 1}-storage"
   size        = 100
   description = "Storage volume for k0s worker ${count.index + 1}"
@@ -204,9 +205,48 @@ resource "openstack_networking_floatingip_v2" "controller" {
   pool = "public"
 }
 
-resource "openstack_compute_floatingip_associate_v2" "controller" {
+# Lookup the auto-created port for controller
+data "openstack_networking_port_v2" "controller_port" {
+  device_id  = openstack_compute_instance_v2.controller.id
+  network_id = data.openstack_networking_network_v2.private.id
+}
+
+# Associate floating IP to controller
+resource "openstack_networking_floatingip_associate_v2" "controller" {
   floating_ip = openstack_networking_floatingip_v2.controller.address
-  instance_id = openstack_compute_instance_v2.controller.id
+  port_id     = data.openstack_networking_port_v2.controller_port.id
+}
+
+# Configure controller as bastion - add worker hostnames to /etc/hosts
+resource "null_resource" "configure_bastion" {
+  depends_on = [
+    openstack_networking_floatingip_associate_v2.controller,
+    openstack_compute_instance_v2.workers
+  ]
+
+  connection {
+    type        = "ssh"
+    user        = var.ssh_user
+    host        = openstack_networking_floatingip_v2.controller.address
+    private_key = file(var.ssh_private_key_path)
+  }
+
+  provisioner "remote-exec" {
+    inline = concat(
+      ["sleep 10"], # Wait for system to stabilize
+      # Add each worker to bastion's /etc/hosts with .app domain
+      [for idx, worker in openstack_compute_instance_v2.workers :
+        "echo '${worker.access_ip_v4}    ${worker.name}.app ${worker.name}' | sudo tee -a /etc/hosts"
+      ],
+      # Verify
+      ["echo 'Bastion /etc/hosts configured:'", "grep k0s-worker /etc/hosts || true"]
+    )
+  }
+
+  # Trigger re-run if worker IPs change
+  triggers = {
+    worker_ips = join(",", openstack_compute_instance_v2.workers[*].access_ip_v4)
+  }
 }
 
 # Worker nodes
@@ -241,39 +281,54 @@ resource "openstack_compute_instance_v2" "workers" {
   EOF
 }
 
-# Floating IPs for workers
+# Optional: Floating IPs for workers (disabled by default to save quota)
 resource "openstack_networking_floatingip_v2" "workers" {
-  count = var.worker_count
+  count = var.assign_worker_floating_ips ? var.worker_count : 0
   pool  = "public"
 }
 
-resource "openstack_compute_floatingip_associate_v2" "workers" {
-  count       = var.worker_count
-  floating_ip = openstack_networking_floatingip_v2.workers[count.index].address
-  instance_id = openstack_compute_instance_v2.workers[count.index].id
+# Lookup the auto-created ports for workers (only if floating IPs enabled)
+data "openstack_networking_port_v2" "worker_ports" {
+  count      = var.assign_worker_floating_ips ? var.worker_count : 0
+  device_id  = openstack_compute_instance_v2.workers[count.index].id
+  network_id = data.openstack_networking_network_v2.private.id
 }
 
-# Attach volumes to workers
+# Associate floating IPs to workers (only if enabled)
+resource "openstack_networking_floatingip_associate_v2" "workers" {
+  count       = var.assign_worker_floating_ips ? var.worker_count : 0
+  floating_ip = openstack_networking_floatingip_v2.workers[count.index].address
+  port_id     = data.openstack_networking_port_v2.worker_ports[count.index].id
+}
+
+# Optional: Attach additional volumes to workers
+# Only created when enable_additional_storage = true
 resource "openstack_compute_volume_attach_v2" "worker_storage" {
-  count       = var.worker_count
+  count       = var.enable_additional_storage ? var.worker_count : 0
   instance_id = openstack_compute_instance_v2.workers[count.index].id
   volume_id   = openstack_blockstorage_volume_v3.worker_storage[count.index].id
 }
 
-# Configure volumes to mount at /var/lib/k0s
+# Optional: Configure volumes to mount at /var/lib/k0s
+# Only runs when enable_additional_storage = true
 resource "null_resource" "configure_volumes" {
-  count = var.worker_count
+  count = var.enable_additional_storage ? var.worker_count : 0
 
   depends_on = [
     openstack_compute_volume_attach_v2.worker_storage,
-    openstack_compute_floatingip_associate_v2.workers
+    openstack_networking_floatingip_associate_v2.workers
   ]
 
   connection {
     type        = "ssh"
     user        = var.ssh_user
-    host        = openstack_networking_floatingip_v2.workers[count.index].address
+    host        = var.assign_worker_floating_ips ? openstack_networking_floatingip_v2.workers[count.index].address : openstack_compute_instance_v2.workers[count.index].access_ip_v4
     private_key = file(var.ssh_private_key_path)
+
+    # If workers don't have floating IPs, SSH via controller as bastion
+    bastion_host        = var.assign_worker_floating_ips ? null : openstack_networking_floatingip_v2.controller.address
+    bastion_user        = var.assign_worker_floating_ips ? null : var.ssh_user
+    bastion_private_key = var.assign_worker_floating_ips ? null : file(var.ssh_private_key_path)
   }
 
   provisioner "remote-exec" {
@@ -300,10 +355,13 @@ resource "local_file" "hosts_entries" {
   filename = "${path.module}/hosts.txt"
   content  = <<-EOT
 # k0s Cluster Hosts
-${openstack_networking_floatingip_v2.controller.address}    k0s-controller
+${openstack_networking_floatingip_v2.controller.address}    k0s-controller.app k0s-controller
 %{for idx, worker in openstack_compute_instance_v2.workers~}
-${openstack_networking_floatingip_v2.workers[idx].address}    ${worker.name}
+${var.assign_worker_floating_ips ? openstack_networking_floatingip_v2.workers[idx].address : worker.access_ip_v4}    ${worker.name}.app ${worker.name}
 %{endfor~}
+
+# Note: Workers use private IPs. SSH via controller as bastion:
+# ssh -J ubuntu@k0s-controller.app ubuntu@k0s-worker-1.app
   EOT
 }
 
@@ -319,8 +377,8 @@ output "controller_private_ip" {
 }
 
 output "worker_public_ips" {
-  value       = openstack_networking_floatingip_v2.workers[*].address
-  description = "Public IP addresses of worker nodes"
+  value       = var.assign_worker_floating_ips ? openstack_networking_floatingip_v2.workers[*].address : ["Workers use private IPs only - SSH via controller"]
+  description = "Public IP addresses of worker nodes (or private IPs if floating IPs disabled)"
 }
 
 output "worker_private_ips" {
@@ -334,7 +392,11 @@ output "ssh_controller" {
 }
 
 output "ssh_workers" {
-  value       = [for ip in openstack_networking_floatingip_v2.workers[*].address : "ssh ${var.ssh_user}@${ip}"]
+  value = var.assign_worker_floating_ips ? [
+    for ip in openstack_networking_floatingip_v2.workers[*].address : "ssh ${var.ssh_user}@${ip}"
+    ] : [
+    for idx, worker in openstack_compute_instance_v2.workers : "ssh -J ${var.ssh_user}@${openstack_networking_floatingip_v2.controller.address} ${var.ssh_user}@${worker.access_ip_v4}"
+  ]
   description = "SSH commands for worker nodes"
 }
 
@@ -347,13 +409,23 @@ output "k0sctl_hosts" {
         user    = var.ssh_user
       }
     }
-    workers = [for idx, ip in openstack_networking_floatingip_v2.workers[*].address : {
-      role = "worker"
-      ssh = {
-        address = ip
-        user    = var.ssh_user
+    workers = var.assign_worker_floating_ips ? [
+      for idx, ip in openstack_networking_floatingip_v2.workers[*].address : {
+        role = "worker"
+        ssh = {
+          address = ip
+          user    = var.ssh_user
+        }
       }
-    }]
+      ] : [
+      for idx, worker in openstack_compute_instance_v2.workers : {
+        role = "worker"
+        ssh = {
+          address = worker.access_ip_v4
+          user    = var.ssh_user
+        }
+      }
+    ]
   }
-  description = "k0sctl hosts configuration"
+  description = "k0sctl hosts configuration (workers use bastion if no floating IPs)"
 }
