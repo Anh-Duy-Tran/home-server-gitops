@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mirotalk
+  labels:
+    app: mirotalk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mirotalk
+  template:
+    metadata:
+      labels:
+        app: mirotalk
+    spec:
+      containers:
+        - name: mirotalk
+          image: mirotalk/p2p:latest
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+          env:
+            - name: SERVER_URL
+              value: "https://mirotalk.duytran.app"
+            - name: NGROK_ENABLED
+              value: "false"
+            - name: API_KEY_SECRET
+              value: "mirotalkp2p_default_secret"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
