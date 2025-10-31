@@ -1,0 +1,33 @@
+# OpenStack/cPouta Configuration
+# Copy this file to terraform.tfvars and fill in your values
+
+# Image name (run: openstack image list)
+# Common options: Ubuntu-24.04, Ubuntu-22.04, Ubuntu-20.04
+image_name = "Ubuntu-24.04"
+
+# Network name (run: openstack network list)
+# This is usually your project network, format: project_XXXXXXX
+network_name = "project_2011111"
+
+# Flavor names (run: openstack flavor list)
+# Common cPouta flavors:
+#   standard.tiny     - 1 vCPU, 1GB RAM
+#   standard.small    - 1 vCPU, 2GB RAM
+#   standard.medium   - 2 vCPU, 8GB RAM
+#   standard.large    - 4 vCPU, 15GB RAM
+#   standard.xlarge   - 6 vCPU, 30GB RAM
+#   standard.xxlarge  - 8 vCPU, 60GB RAM
+#   standard.3xlarge  - 8 vCPU, 120GB RAM
+controller_flavor = "standard.medium"
+worker_flavor     = "standard.medium"
+
+# Number of worker nodes
+worker_count = 4
+
+# SSH configuration
+ssh_public_key_path  = "~/.ssh/id_rsa.pub"
+ssh_private_key_path = "~/.ssh/id_rsa"
+
+# SSH user for Ubuntu images (usually 'ubuntu')
+# For other images, might be 'cloud-user', 'centos', 'debian', etc.
+ssh_user = "ubuntu"

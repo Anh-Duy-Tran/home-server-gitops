@@ -1,0 +1,45 @@
+# OpenTofu/Terraform state files
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+
+# Variable files with sensitive data
+terraform.tfvars
+*.auto.tfvars
+
+# OpenRC files (contain credentials)
+*-openrc.sh
+*.openrc
+
+# Generated files
+hosts.txt
+k0sctl-hosts.json
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# SSH keys (if stored in this directory)
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
