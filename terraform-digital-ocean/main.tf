@@ -199,9 +199,9 @@ resource "local_file" "hosts_entries" {
   filename = "${path.module}/hosts.txt"
   content  = <<-EOT
 # k0s Cluster Hosts
-${digitalocean_droplet.controller.ipv4_address}    k0s-controller
+${digitalocean_droplet.controller.ipv4_address}    k0s-controller.app
 %{for worker in digitalocean_droplet.workers~}
-${worker.ipv4_address}    ${worker.name}
+${worker.ipv4_address}    ${worker.name}.app
 %{endfor~}
   EOT
 }
