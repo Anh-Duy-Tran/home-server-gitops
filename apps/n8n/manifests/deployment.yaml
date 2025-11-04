@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: n8n
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: n8n
@@ -13,33 +13,33 @@ spec:
         app: n8n
     spec:
       containers:
-      - name: n8n
-        image: n8nio/n8n:1.119.0
-        ports:
-        - containerPort: 5678
-          name: http
-        env:
-        - name: N8N_HOST
-          value: "n8n.duytran.app"
-        - name: N8N_PORT
-          value: "5678"
-        - name: N8N_PROTOCOL
-          value: "http"
-        - name: WEBHOOK_URL
-          value: "https://n8n.duytran.app/"
-        - name: GENERIC_TIMEZONE
-          value: "UTC"
-        volumeMounts:
-        - name: data
-          mountPath: /home/node/.n8n
-        resources:
-          requests:
-            cpu: 100m
-            memory: 256Mi
-          limits:
-            cpu: 1000m
-            memory: 1Gi
+        - name: n8n
+          image: n8nio/n8n:1.119.0
+          ports:
+            - containerPort: 5678
+              name: http
+          env:
+            - name: N8N_HOST
+              value: "n8n.duytran.app"
+            - name: N8N_PORT
+              value: "5678"
+            - name: N8N_PROTOCOL
+              value: "http"
+            - name: WEBHOOK_URL
+              value: "https://n8n.duytran.app/"
+            - name: GENERIC_TIMEZONE
+              value: "UTC"
+          volumeMounts:
+            - name: data
+              mountPath: /home/node/.n8n
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
       volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: n8n-data
+        - name: data
+          persistentVolumeClaim:
+            claimName: n8n-data
