@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: n8n
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: n8n
@@ -34,11 +34,11 @@ spec:
               mountPath: /home/node/.n8n
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
               cpu: 1000m
               memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 3Gi
       volumes:
         - name: data
           persistentVolumeClaim:
