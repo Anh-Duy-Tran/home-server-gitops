@@ -33,6 +33,21 @@ spec:
               value: "https://n8n.duytran.app/"
             - name: GENERIC_TIMEZONE
               value: "UTC"
+            # Enable Prometheus metrics
+            - name: N8N_METRICS
+              value: "true"
+            - name: N8N_METRICS_INCLUDE_WORKFLOW_ID_LABEL
+              value: "true"
+            - name: N8N_METRICS_INCLUDE_NODE_TYPE_LABEL
+              value: "true"
+            - name: N8N_METRICS_INCLUDE_CREDENTIAL_TYPE_LABEL
+              value: "true"
+            - name: N8N_METRICS_INCLUDE_API_ENDPOINTS
+              value: "true"
+            - name: N8N_METRICS_INCLUDE_CACHE_METRICS
+              value: "true"
+            - name: N8N_METRICS_INCLUDE_MESSAGE_EVENT_BUS_METRICS
+              value: "true"
           volumeMounts:
             - name: data
               mountPath: /home/node/.n8n
