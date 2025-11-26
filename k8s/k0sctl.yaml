@@ -5,12 +5,12 @@ metadata:
   user: admin
 spec:
   hosts:
-    - role: controller
+    - role: controller+worker
       installFlags:
         - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
       ssh:
         address: k0s-controller.app
-        user: root
+        user: duytran
         port: 22
         keyPath: ~/.ssh/id_rsa
       hooks:
@@ -34,96 +34,25 @@ spec:
           src: ./iptables.rules
           dstDir: /etc/iptables/
           perm: 0644
+    #
+    # - role: worker
+    #   installFlags:
+    #     - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
+    #   ssh:
+    #     address: k0s-worker-1.app
+    #     user: duytran
+    #     port: 22
+    #     keyPath: ~/.ssh/id_rsa
+    #   hooks:
+    #     apply:
+    #       before:
+    #         - sudo iptables-restore < /etc/iptables/iptables.rules
+    #   files:
+    #     - name: iptables-rules-restore
+    #       src: ./iptables.rules
+    #       dstDir: /etc/iptables/
+    #       perm: 0644
 
-    - role: worker
-      installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
-      ssh:
-        address: k0s-worker-1.app
-        user: root
-        port: 22
-        keyPath: ~/.ssh/id_rsa
-      hooks:
-        apply:
-          before:
-            - sudo iptables-restore < /etc/iptables/iptables.rules
-      files:
-        - name: iptables-rules-restore
-          src: ./iptables.rules
-          dstDir: /etc/iptables/
-          perm: 0644
-
-    - role: worker
-      installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
-      ssh:
-        address: k0s-worker-2.app
-        user: root
-        port: 22
-        keyPath: ~/.ssh/id_rsa
-      hooks:
-        apply:
-          before:
-            - sudo iptables-restore < /etc/iptables/iptables.rules
-      files:
-        - name: iptables-rules-restore
-          src: ./iptables.rules
-          dstDir: /etc/iptables/
-          perm: 0644
-
-    - role: worker
-      installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
-      ssh:
-        address: k0s-worker-3.app
-        user: root
-        port: 22
-        keyPath: ~/.ssh/id_rsa
-      hooks:
-        apply:
-          before:
-            - sudo iptables-restore < /etc/iptables/iptables.rules
-      files:
-        - name: iptables-rules-restore
-          src: ./iptables.rules
-          dstDir: /etc/iptables/
-          perm: 0644
-
-    - role: worker
-      installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
-      ssh:
-        address: k0s-worker-4.app
-        user: root
-        port: 22
-        keyPath: ~/.ssh/id_rsa
-      hooks:
-        apply:
-          before:
-            - sudo iptables-restore < /etc/iptables/iptables.rules
-      files:
-        - name: iptables-rules-restore
-          src: ./iptables.rules
-          dstDir: /etc/iptables/
-          perm: 0644
-
-    - role: worker
-      installFlags:
-        - --kubelet-extra-args="--resolv-conf=/run/systemd/resolve/resolv.conf"
-      ssh:
-        address: k0s-worker-5.app
-        user: root
-        port: 22
-        keyPath: ~/.ssh/id_rsa
-      hooks:
-        apply:
-          before:
-            - sudo iptables-restore < /etc/iptables/iptables.rules
-      files:
-        - name: iptables-rules-restore
-          src: ./iptables.rules
-          dstDir: /etc/iptables/
-          perm: 0644
   k0s:
     config:
       apiVersion: k0s.k0sproject.io/v1beta1
