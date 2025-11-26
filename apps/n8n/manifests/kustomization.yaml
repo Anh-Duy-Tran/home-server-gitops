@@ -8,7 +8,7 @@ resources:
   - pvc.yaml
   - deployment.yaml
   - service.yaml
-  - ingress.yaml
+  # - ingress.yaml
 
 labels:
   - pairs:
