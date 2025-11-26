@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: voice-assistant
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Anh-Duy-Tran/home-server-gitops.git
+    targetRevision: main
+    path: apps/voice-assistant/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: voice-assistant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

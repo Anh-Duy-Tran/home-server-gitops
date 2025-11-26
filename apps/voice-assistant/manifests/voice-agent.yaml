@@ -1,0 +1,117 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: voice-agent-config
+  namespace: voice-assistant
+data:
+  # MQTT Configuration
+  MQTT_BROKER: "mosquitto.voice-assistant.svc.cluster.local"
+  MQTT_PORT: "1883"
+  MQTT_TOPIC: "home/voice/commands"
+
+  # STT Backend: vosk (local), openrouter (cloud), groq (cloud)
+  # Vosk: Free, local, fast, moderate accuracy (~85%)
+  # OpenRouter: Paid, cloud, high accuracy (~95%), uses your OpenRouter API key
+  # Groq: Free tier (10k req/month), cloud, very fast, high accuracy (~95%)
+  STT_BACKEND: "vosk"
+
+  # Optional: Override default model for cloud backends
+  # OpenRouter: "openai/whisper-large-v3" (default)
+  # Groq: "whisper-large-v3" (default)
+  # STT_MODEL: ""
+
+  # Audio Configuration
+  SAMPLE_RATE: "16000"
+  WAKE_PHRASES: "What is up Gee, Yo dog"
+  POST_WAKE_RECORD_SECONDS: "3.0"
+
+  # Metadata
+  USER: "duy"
+  SOURCE: "k8s-voice-assistant"
+
+---
+# Note: Secret is managed separately
+# See manifests/secrets.yaml.template for creating the secret
+# Or use: kubectl create secret generic voice-agent-secret \
+#           --from-literal=STT_API_KEY='your-key' -n voice-assistant
+#
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voice-agent
+  namespace: voice-assistant
+  labels:
+    app: voice-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: voice-agent
+  template:
+    metadata:
+      labels:
+        app: voice-agent
+    spec:
+      # Node selector for node with microphone
+      # For single-node clusters, comment out nodeSelector or add custom label
+      # nodeSelector:
+        # For multi-node: uncomment and label your mic node
+        # voice-capable: "true"
+        # kubectl label node alarm voice-capable=true
+
+      # Host network to access USB audio devices
+      hostNetwork: true
+
+      containers:
+        - name: voice-agent
+          image: your-registry/voice-agent:latest # Update with your registry
+          imagePullPolicy: Always
+
+          envFrom:
+            - configMapRef:
+                name: voice-agent-config
+
+          env:
+            - name: STT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: voice-agent-secret
+                  key: STT_API_KEY
+                  optional: true # Won't fail if using vosk (no API key needed)
+
+          # Access to audio devices
+          securityContext:
+            privileged: true # Required for audio device access
+
+          volumeMounts:
+            - name: dev-snd
+              mountPath: /dev/snd
+
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+
+          # Health checks (check if process is running)
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - -f
+                - voice_agent.py
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+
+      volumes:
+        - name: dev-snd
+          hostPath:
+            path: /dev/snd
+            type: DirectoryOrCreate
+
+      restartPolicy: Always

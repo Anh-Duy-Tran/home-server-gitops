@@ -1,0 +1,143 @@
+{
+  "name": "Voice Assistant to Home Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "topic": "home/voice/commands",
+        "options": {}
+      },
+      "name": "MQTT Trigger",
+      "type": "n8n-nodes-base.mqttTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": {
+        "mqtt": {
+          "id": "1",
+          "name": "Voice Assistant MQTT"
+        }
+      },
+      "webhookId": "",
+      "id": "mqtt-trigger-node"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse MQTT payload\nconst payload = JSON.parse($input.item.json.payload);\nconst text = payload.text.toLowerCase();\nconst user = payload.user;\nconst confidence = payload.confidence;\n\n// Log the command\nconsole.log(`Voice command from ${user}: \"${text}\" (confidence: ${confidence})`);\n\n// Command parsing logic\nlet haService = null;\nlet entityId = null;\nlet serviceData = {};\n\n// Kitchen light commands\nif (text.includes('kitchen') && text.includes('light')) {\n  if (text.includes('on') || text.includes('turn on')) {\n    haService = 'light/turn_on';\n    entityId = 'light.kitchen_light';\n  } else if (text.includes('off') || text.includes('turn off')) {\n    haService = 'light/turn_off';\n    entityId = 'light.kitchen_light';\n  }\n}\n\n// Living room light commands\nelse if (text.includes('living room') && text.includes('light')) {\n  if (text.includes('on')) {\n    haService = 'light/turn_on';\n    entityId = 'light.living_room_light';\n  } else if (text.includes('off')) {\n    haService = 'light/turn_off';\n    entityId = 'light.living_room_light';\n  }\n}\n\n// Temperature query\nelse if (text.includes('temperature') || text.includes('how hot') || text.includes('how cold')) {\n  haService = 'sensor/get_state';\n  entityId = 'sensor.living_room_temperature';\n}\n\n// Lock/unlock door\nelse if (text.includes('door')) {\n  if (text.includes('lock')) {\n    haService = 'lock/lock';\n    entityId = 'lock.front_door';\n  } else if (text.includes('unlock')) {\n    haService = 'lock/unlock';\n    entityId = 'lock.front_door';\n  }\n}\n\n// Scene activation\nelse if (text.includes('movie time') || text.includes('movie mode')) {\n  haService = 'scene/turn_on';\n  entityId = 'scene.movie_time';\n}\n\n// If no command matched\nif (!haService) {\n  return {\n    json: {\n      error: 'Command not recognized',\n      originalText: text,\n      skip: true\n    }\n  };\n}\n\n// Return parsed command for Home Assistant\nreturn {\n  json: {\n    service: haService,\n    entity_id: entityId,\n    service_data: serviceData,\n    originalCommand: payload\n  }\n};"
+      },
+      "name": "Parse Voice Command",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "id": "function-node"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.skip}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Skip Unknown Commands",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "id": "if-node"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://homeassistant.default.svc.cluster.local:8123/api/services/{{$json.service}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "entity_id",
+              "value": "={{$json.entity_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Call Home Assistant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "Home Assistant Bearer Token"
+        }
+      },
+      "id": "http-request-node"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log successful execution\nconst command = $input.first().json.originalCommand;\nconst haResponse = $input.first().json;\n\nconsole.log('Successfully executed voice command:', command.text);\nconsole.log('Home Assistant response:', haResponse);\n\nreturn {\n  json: {\n    success: true,\n    command: command.text,\n    user: command.user,\n    timestamp: command.timestamp\n  }\n};"
+      },
+      "name": "Log Success",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "id": "log-success-node"
+    }
+  ],
+  "connections": {
+    "MQTT Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Voice Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Voice Command": {
+      "main": [
+        [
+          {
+            "node": "Skip Unknown Commands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Unknown Commands": {
+      "main": [
+        [
+          {
+            "node": "Call Home Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Home Assistant": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-26T00:00:00.000Z",
+  "versionId": "1"
+}
