@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calibre-server
+  namespace: calibre
+  labels:
+    app: calibre-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # Only one pod can mount RWO PVC
+  selector:
+    matchLabels:
+      app: calibre-server
+  template:
+    metadata:
+      labels:
+        app: calibre-server
+    spec:
+      containers:
+        - name: calibre-server
+          image: linuxserver/calibre-web:latest
+          ports:
+            - name: http
+              containerPort: 8083
+              protocol: TCP
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "UTC"
+            - name: DOCKER_MODS
+              value: "linuxserver/mods:universal-calibre"
+          volumeMounts:
+            - name: calibre-library
+              mountPath: /books
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+      volumes:
+        - name: calibre-library
+          persistentVolumeClaim:
+            claimName: calibre-library-pvc
+        - name: config
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: calibre-server
+  namespace: calibre
+  labels:
+    app: calibre-server
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8083
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: calibre-server

@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: calibre
+
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - calibre-server.yaml
+  # Note: Jobs are applied separately, not part of the main deployment
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: calibre
+      app.kubernetes.io/part-of: calibre

@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: calibre-pull-poc
+  namespace: calibre
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: calibre
+        app.kubernetes.io/component: puller
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: calibre-puller
+        image: ghcr.io/anh-duy-tran/calibre-puller:latest
+        env:
+        - name: REMOTE_OPDS_URL
+          value: "https://calibrebooks.dwilliams.cloud/opds"
+        - name: MAX_BOOKS
+          value: "5"  # Safe default for PoC
+        - name: FORMATS
+          value: "epub"
+        - name: FILTER_GENRE
+          value: ""
+        - name: LIBRARY_PATH
+          value: "/data/calibre-library"
+        - name: DRY_RUN
+          value: "0"  # Set to "1" to preview without downloading
+        volumeMounts:
+        - name: calibre-library
+          mountPath: /data/calibre-library
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: calibre-library
+        persistentVolumeClaim:
+          claimName: calibre-library-pvc
