@@ -6,13 +6,18 @@ namespace: postgres
 resources:
   - namespace.yaml
   - postgres-deployment.yaml
+  - pgadmin-deployment.yaml
 
 images:
   - name: postgres
     newTag: "16-alpine"
+  - name: dpage/pgadmin4
+    newTag: "latest"
 
 replicas:
   - name: postgres
+    count: 1
+  - name: pgadmin
     count: 1
 
 commonLabels:
